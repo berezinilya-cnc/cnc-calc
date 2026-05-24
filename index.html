@@ -212,80 +212,117 @@ select option { background: #1a3524; color: var(--text2); }
 
 .range-lbl { font-size: 0.65rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; display: block; }
 
-.range-display {
-  background: linear-gradient(135deg, rgba(90,173,120,0.07) 0%, rgba(0,0,0,0.12) 100%), #111f17;
-  border: 1px solid #254d36;
-  border-radius: 12px;
-  padding: 12px 18px 10px;
-  margin-bottom: 14px;
-  box-shadow: 0 1px 0 rgba(90,173,120,0.08) inset;
-  display: flex; align-items: center; gap: 10px;
-}
-.range-display:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(90,173,120,0.12), 0 1px 0 rgba(90,173,120,0.08) inset;
-}
-.range-big-input {
-  background: none; border: none; outline: none;
-  font-size: 2.8rem; font-weight: 300;
-  color: var(--text); letter-spacing: -0.04em; line-height: 1;
-  width: 100%; min-width: 0;
-  font-family: inherit;
-  -moz-appearance: textfield;
-}
-.range-big-input::-webkit-outer-spin-button,
-.range-big-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-.range-big-unit {
-  font-size: 1rem; color: var(--muted);
-  font-weight: 300; white-space: nowrap; flex-shrink: 0;
-}
-.range-sub { display: none; }
-
-.range-track-wrap {
-  padding: 8px 0 4px;
+/* DRUMS */
+.drums-wrap {
   position: relative;
+  background: linear-gradient(135deg, rgba(90,173,120,0.06) 0%, rgba(0,0,0,0.15) 100%), #0f1f15;
+  border: 1px solid #254d36;
+  border-radius: 14px;
+  padding: 14px 12px 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 0 rgba(90,173,120,0.08) inset, 0 4px 16px rgba(0,0,0,0.3);
 }
-input[type=range] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%; height: 6px;
-  background: #1a3524;
-  border-radius: 3px;
-  outline: none;
-  cursor: pointer;
-  border: none;
-  display: block;
+.drums-row {
+  display: flex; align-items: flex-end; justify-content: center; gap: 4px;
 }
-input[type=range]::-webkit-slider-runnable-track {
-  height: 6px;
-  background: #1a3524;
-  border-radius: 3px;
+.drum-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+.drum-lbl {
+  font-size: 0.55rem; color: var(--muted2);
+  text-transform: uppercase; letter-spacing: 0.06em;
 }
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 44px; height: 44px;
-  background: radial-gradient(circle at 38% 35%, #a0eabb, #3a8a58 60%, #2a6640);
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 0 0 4px rgba(90,173,120,0.25), 0 3px 12px rgba(0,0,0,0.5);
-  margin-top: -19px;
+.drum {
+  width: 100%; height: 140px;
+  background: linear-gradient(180deg, #080f0a 0%, #132a1c 28%, #1a3a26 50%, #132a1c 72%, #080f0a 100%);
+  border: 1px solid #2d5c3e;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  cursor: ns-resize;
+  user-select: none; -webkit-user-select: none;
+  touch-action: none;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.5) inset;
 }
-input[type=range]:active::-webkit-slider-thumb {
-  box-shadow: 0 0 0 8px rgba(90,173,120,0.15), 0 3px 14px rgba(0,0,0,0.5);
+/* selection strip */
+.drum::before {
+  content: '';
+  position: absolute; left: 0; right: 0;
+  top: 50%; transform: translateY(-50%);
+  height: 44px;
+  background: rgba(90,173,120,0.08);
+  border-top: 1px solid rgba(90,173,120,0.25);
+  border-bottom: 1px solid rgba(90,173,120,0.25);
+  pointer-events: none; z-index: 1;
 }
-input[type=range]::-moz-range-thumb {
-  width: 44px; height: 44px;
-  background: var(--accent);
-  border: none; border-radius: 50%; cursor: pointer;
+/* fade top/bottom */
+.drum::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg,
+    rgba(8,15,10,0.92) 0%,
+    rgba(8,15,10,0.4) 22%,
+    transparent 38%,
+    transparent 62%,
+    rgba(8,15,10,0.4) 78%,
+    rgba(8,15,10,0.92) 100%);
+  pointer-events: none; z-index: 2;
+}
+.drum-strip {
+  position: absolute; left: 0; right: 0; top: 0;
+  will-change: transform;
+}
+.drum-digit {
+  height: 44px; line-height: 44px;
+  text-align: center;
+  font-size: 1.8rem; font-weight: 300;
+  color: var(--text2);
+  user-select: none;
+}
+.drum-digit.active {
+  color: var(--accent-hi);
+  font-weight: 500;
+  font-size: 2rem;
+  text-shadow: 0 0 14px rgba(90,173,120,0.5);
+}
+.drum-sep {
+  font-size: 1.4rem; color: var(--muted2);
+  padding-bottom: 0; padding-top: 4px;
+  flex-shrink: 0; width: 10px; text-align: center;
+  align-self: center;
+}
+.drums-total {
+  text-align: center; margin-top: 10px;
+  font-size: 0.72rem; color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.drums-total span { color: var(--accent-hi); font-weight: 600; font-size: 0.82rem; }
+.drums-tap-hint {
+  text-align: center; margin-top: 5px;
+  font-size: 0.6rem; color: var(--muted2); letter-spacing: 0.04em;
 }
 
-.range-marks { position: relative; height: 18px; margin-top: 10px; }
-.range-marks span {
-  position: absolute;
-  font-size: 0.6rem;
-  color: var(--muted2);
-  white-space: nowrap;
+/* manual input overlay */
+.drum-input-overlay {
+  display: none;
+  position: absolute; inset: 0; z-index: 10;
+  align-items: center; justify-content: center;
+  background: rgba(8,15,10,0.55);
+  backdrop-filter: blur(2px);
+  border-radius: 12px;
 }
+.drum-input-overlay.show { display: flex; }
+.drum-manual-input {
+  background: none; border: none; outline: none;
+  width: 100%; text-align: center;
+  font-family: inherit;
+  font-size: 1.9rem; font-weight: 300;
+  color: var(--accent-hi);
+  letter-spacing: 0.05em;
+  caret-color: var(--accent-hi);
+  -moz-appearance: textfield;
+  padding: 0 4px;
+}
+.drum-manual-input::-webkit-outer-spin-button,
+.drum-manual-input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
 /* DIVIDER */
 .divider {
@@ -549,20 +586,37 @@ input[type=range]::-moz-range-thumb {
         Прикрепить контур
       </button>
     </div>
-    <div class="range-display">
-      <input type="number" class="range-big-input" id="lenVal"
-        value="1" min="1" max="99999" inputmode="numeric"
-        oninput="onLenManual(this.value)">
-      <span class="range-big-unit">м/пог</span>
-    </div>
-    <div class="range-track-wrap">
-      <input type="range" id="lenSlider" min="1" max="1000" value="1" step="1"
-        oninput="onLen(this.value)" onchange="onLen(this.value)">
-    </div>
-    <div class="range-marks">
-      <span style="left:0">1 м</span>
-      <span style="left:19.9%;transform:translateX(-50%)">200 м</span>
-      <span style="right:0">1000 м</span>
+    <div class="drums-wrap">
+      <div class="drums-row">
+        <div class="drum-col">
+          <div class="drum-lbl">тыс.</div>
+          <div class="drum" id="drum3" data-idx="3"></div>
+        </div>
+        <div class="drum-sep">·</div>
+        <div class="drum-col">
+          <div class="drum-lbl">сотни</div>
+          <div class="drum" id="drum2" data-idx="2"></div>
+        </div>
+        <div class="drum-sep">·</div>
+        <div class="drum-col">
+          <div class="drum-lbl">десятки</div>
+          <div class="drum" id="drum1" data-idx="1"></div>
+        </div>
+        <div class="drum-sep">·</div>
+        <div class="drum-col">
+          <div class="drum-lbl">единицы</div>
+          <div class="drum" id="drum0" data-idx="0"></div>
+        </div>
+      </div>
+      <div class="drums-total">итого: <span id="drumsTotal">1</span> м/пог</div>
+      <div class="drums-tap-hint">нажмите на барабан для ввода числа</div>
+      <!-- hidden full-value input shown on tap -->
+      <div class="drum-input-overlay" id="drumInputOverlay">
+        <input type="number" class="drum-manual-input" id="drumManualInput"
+          inputmode="numeric" min="1" max="9999" placeholder="0"
+          onblur="closeDrumInput()"
+          onkeydown="drumInputKey(event)">
+      </div>
     </div>
   </div>
 
@@ -726,18 +780,266 @@ function onMat(){
   setTimeout(calc,0);
 }
 
-function onLen(v){
-  meters=parseInt(v)||1;
-  var inp=document.getElementById("lenVal");
-  if(document.activeElement!==inp) inp.value=meters;
-  document.getElementById("lenSlider").value=Math.min(meters,1000);
+// ── DRUMS ────────────────────────────────────────────────────────────────────
+var drumDigits = [1, 0, 0, 0];
+var CELL = 44;           // px per digit — matches CSS height
+var FRICTION = 0.82;     // velocity decay per frame
+var drumAnims = {};      // per-drum animation state
+
+function drumValue(){
+  return drumDigits[3]*1000 + drumDigits[2]*100 + drumDigits[1]*10 + drumDigits[0];
+}
+
+// Build strip of 30 digits (3 full loops) and position it
+function buildStrip(el, idx){
+  var strip = document.createElement('div');
+  strip.className = 'drum-strip';
+  strip.id = 'strip' + idx;
+  for(var rep = 0; rep < 3; rep++){
+    for(var d = 0; d < 10; d++){
+      var span = document.createElement('div');
+      span.className = 'drum-digit';
+      span.textContent = d;
+      strip.appendChild(span);
+    }
+  }
+  el.innerHTML = '';
+  el.appendChild(strip);
+  positionStrip(idx, drumDigits[idx], 0);
+}
+
+// offsetY = fractional drag offset in px (0 = snapped)
+function positionStrip(idx, digit, offsetY){
+  var strip = document.getElementById('strip' + idx);
+  if(!strip) return;
+  var drumH = 140;
+  // center of drum
+  var centerY = drumH / 2 - CELL / 2;
+  // digit is in middle loop (rep=1), so base offset = (10 + digit) * CELL
+  var base = -((10 + digit) * CELL) + centerY;
+  strip.style.transform = 'translateY(' + (base + offsetY) + 'px)';
+  // mark active digit
+  var all = strip.querySelectorAll('.drum-digit');
+  for(var i = 0; i < all.length; i++){
+    all[i].classList.remove('active');
+  }
+  var activeIdx = 10 + digit; // middle rep
+  if(all[activeIdx]) all[activeIdx].classList.add('active');
+}
+
+function snapDrum(idx){
+  drumDigits[idx] = ((drumDigits[idx]) % 10 + 10) % 10;
+  positionStrip(idx, drumDigits[idx], 0);
+  meters = drumValue();
+  document.getElementById('drumsTotal').textContent = meters;
+  var lv = document.getElementById('lenVal');
+  if(lv) lv.value = meters;
   calc();
 }
+
+function initDrums(){
+  for(var i = 0; i < 4; i++){
+    var el = document.getElementById('drum' + i);
+    if(el) buildStrip(el, i);
+  }
+
+  for(var i = 0; i < 4; i++){
+    (function(idx){
+      var el = document.getElementById('drum' + idx);
+      if(!el) return;
+
+      var isDragging = false;
+      var lastY = 0;
+      var velocity = 0;
+      var dragOffset = 0;    // live px offset during drag
+      var lastTime = 0;
+      var animId = null;
+
+      function cancelAnim(){
+        if(animId){ cancelAnimationFrame(animId); animId = null; }
+      }
+
+      function commit(totalPx){
+        // how many digits did we scroll?
+        var delta = -Math.round(totalPx / CELL);
+        var old = drumDigits[idx];
+        drumDigits[idx] = ((old + delta) % 10 + 10) % 10;
+      }
+
+      function fling(vel){
+        // animate strip coasting with friction
+        var off = dragOffset;
+        var raf;
+        function step(){
+          vel *= FRICTION;
+          off += vel;
+          // how many full cells scrolled?
+          var snappedDigit = drumDigits[idx];
+          var displayOff = off % CELL;
+          // keep display offset in range
+          positionStrip(idx, snappedDigit, displayOff);
+          if(Math.abs(vel) < 0.5){
+            // snap to nearest
+            var delta = -Math.round(off / CELL);
+            drumDigits[idx] = ((drumDigits[idx] + delta) % 10 + 10) % 10;
+            positionStrip(idx, drumDigits[idx], 0);
+            if(Math.abs(delta) > 0 && navigator.vibrate) navigator.vibrate(6);
+            meters = drumValue();
+            document.getElementById('drumsTotal').textContent = meters;
+            var lv = document.getElementById('lenVal');
+            if(lv) lv.value = meters;
+            calc();
+            return;
+          }
+          // count steps for vibration
+          var steps = Math.round(off / CELL);
+          if(steps !== 0){
+            var d = ((drumDigits[idx] - steps) % 10 + 10) % 10;
+            if(d !== drumDigits[idx]){
+              drumDigits[idx] = d;
+              if(navigator.vibrate) navigator.vibrate(4);
+              off -= steps * CELL;
+            }
+          }
+          raf = requestAnimationFrame(step);
+        }
+        raf = requestAnimationFrame(step);
+      }
+
+      // ── TOUCH ──
+      el.addEventListener('touchstart', function(e){
+        cancelAnim();
+        isDragging = true;
+        el._didDrag = false;
+        el._startY = e.touches[0].clientY;
+        lastY = e.touches[0].clientY;
+        velocity = 0; dragOffset = 0;
+        lastTime = Date.now();
+        e.preventDefault();
+      }, {passive:false});
+
+      el.addEventListener('touchmove', function(e){
+        if(!isDragging) return;
+        var y = e.touches[0].clientY;
+        var dy = y - lastY;
+        if(Math.abs(y - el._startY) > 5) el._didDrag = true;
+        var now = Date.now();
+        var dt = Math.max(1, now - lastTime);
+        velocity = dy / dt * 16; // px per frame at 60fps
+        lastY = y; lastTime = now;
+        dragOffset += dy;
+
+        // live visual update
+        var cellsDragged = Math.round(dragOffset / CELL);
+        var displayDigit = ((drumDigits[idx] - cellsDragged) % 10 + 10) % 10;
+        var displayOff = dragOffset - cellsDragged * CELL;
+        positionStrip(idx, displayDigit, displayOff);
+
+        // vibrate on each cell boundary
+        if(Math.abs(dragOffset) >= CELL){
+          var steps = Math.trunc(dragOffset / CELL);
+          if(steps !== 0){
+            if(navigator.vibrate) navigator.vibrate(4);
+          }
+        }
+        e.preventDefault();
+      }, {passive:false});
+
+      el.addEventListener('touchend', function(e){
+        if(!isDragging) return;
+        isDragging = false;
+        if(!el._didDrag){
+          // short tap — open manual input
+          e.preventDefault();
+          openDrumInput();
+          return;
+        }
+        // commit drag position
+        var cellsDragged = Math.round(dragOffset / CELL);
+        drumDigits[idx] = ((drumDigits[idx] - cellsDragged) % 10 + 10) % 10;
+        dragOffset -= cellsDragged * CELL;
+        positionStrip(idx, drumDigits[idx], dragOffset);
+        fling(velocity);
+        e.preventDefault();
+      }, {passive:false});
+
+      // ── MOUSE (desktop) ──
+      var mDown = false, mLastY = 0, mOffset = 0, mVel = 0, mTime = 0;
+      el.addEventListener('mousedown', function(e){
+        cancelAnim();
+        mDown = true; mLastY = e.clientY; mOffset = 0; mVel = 0; mTime = Date.now();
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', function(e){
+        if(!mDown) return;
+        var dy = e.clientY - mLastY;
+        var now = Date.now();
+        mVel = dy / Math.max(1, now - mTime) * 16;
+        mLastY = e.clientY; mTime = now;
+        mOffset += dy;
+        var cells = Math.round(mOffset / CELL);
+        var d = ((drumDigits[idx] - cells) % 10 + 10) % 10;
+        positionStrip(idx, d, mOffset - cells * CELL);
+      });
+      window.addEventListener('mouseup', function(e){
+        if(!mDown) return;
+        mDown = false;
+        if(Math.abs(mOffset) < 4){
+          // it was a click, not a drag
+          openDrumInput();
+          return;
+        }
+        var cells = Math.round(mOffset / CELL);
+        drumDigits[idx] = ((drumDigits[idx] - cells) % 10 + 10) % 10;
+        mOffset -= cells * CELL;
+        positionStrip(idx, drumDigits[idx], mOffset);
+        fling(mVel);
+      });
+
+    })(i);
+  }
+  // tap handled in touchend of each drum (see _didDrag flag)
+}
+
+function openDrumInput(){
+  var overlay = document.getElementById('drumInputOverlay');
+  var inp = document.getElementById('drumManualInput');
+  overlay.classList.add('show');
+  inp.value = drumValue() === 1 ? '' : drumValue();
+  inp.focus();
+  inp.select();
+}
+
+function closeDrumInput(){
+  var overlay = document.getElementById('drumInputOverlay');
+  var inp = document.getElementById('drumManualInput');
+  var val = parseInt(inp.value);
+  overlay.classList.remove('show');
+  if(val >= 1){
+    onLenManual(val);
+  }
+}
+
+function drumInputKey(e){
+  if(e.key === 'Enter' || e.key === 'Go'){
+    e.preventDefault();
+    document.getElementById('drumManualInput').blur();
+  }
+  if(e.key === 'Escape'){
+    document.getElementById('drumInputOverlay').classList.remove('show');
+  }
+}
+
+function onLen(v){ /* legacy, unused */ }
 function onLenManual(v){
-  var val=parseInt(v)||1;
-  if(val<1) val=1;
-  meters=val;
-  document.getElementById("lenSlider").value=Math.min(meters,1000);
+  var val = Math.max(1, parseInt(v)||1);
+  meters = val;
+  drumDigits[3] = Math.floor(val/1000) % 10;
+  drumDigits[2] = Math.floor(val/100)  % 10;
+  drumDigits[1] = Math.floor(val/10)   % 10;
+  drumDigits[0] = val % 10;
+  for(var i=0;i<4;i++) positionStrip(i, drumDigits[i], 0);
+  document.getElementById('drumsTotal').textContent = val;
   calc();
 }
 
@@ -973,7 +1275,7 @@ function applyLength(){
   if(!detectedMeters) return;
   var v = Math.max(1, Math.round(detectedMeters));
   meters = v;
-  document.getElementById('lenVal').value = v;
+  onLenManual(v);
   document.getElementById('lenSlider').value = Math.min(v, 1000);
   calc();
   document.getElementById('attachModal').classList.remove('open');
@@ -1176,6 +1478,7 @@ function parseDXF(text, filename){
 }
 
 
+window.addEventListener("load", function(){ initDrums(); });
 </script>
 
 <!-- MODAL: ATTACH FILE -->
