@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>ЧПУ Калькулятор</title>
+<style>
+:root {
+  --bg: #0a1a10;
+  --card: #142b1d;
+  --field: #1a3524;
+  --border: #274d36;
+  --border2: #1e3d2a;
+  --accent: #5aad78;
+  --accent-hi: #6dc88a;
+  --text: #d4f0df;
+  --text2: #c0e0cc;
+  --muted: #4a7a5e;
+  --muted2: #335544;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 16px 12px 80px;
+}
+
+.card {
+  background: linear-gradient(175deg, #1c3e2a 0%, #142b1d 50%, #0f2318 100%);
+  border-radius: 18px;
+  padding: 24px 18px;
+  border: 1px solid rgba(90,173,120,0.2);
+  box-shadow: 0 1px 0 rgba(90,173,120,0.15) inset, 0 8px 40px rgba(0,0,0,0.5);
+  position: relative;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 12%; right: 12%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(120,210,150,0.35), transparent);
+  pointer-events: none;
+}
+
+h1 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-hi);
+  margin-bottom: 28px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* FIELDS */
+.field { margin-bottom: 18px; }
+
+.lbl {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+select, .num-input {
+  width: 100%;
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 14px;
+  font-family: inherit;
+  font-size: 16px; /* prevents iOS zoom */
+  color: var(--text2);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: border-color 0.2s;
+}
+select {
+  background-color: var(--field);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a7a5e' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+  cursor: pointer;
+}
+select:focus, .num-input:focus { border-color: var(--accent); }
+select:disabled { opacity: 0.5; }
+
+select option { background: #1a3524; color: var(--text2); }
+.num-input { -moz-appearance: textfield; }
+.num-input::-webkit-outer-spin-button,
+.num-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.num-input::placeholder { color: var(--muted2); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* RANGE */
+.range-lbl { font-size: 0.65rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; display: block; }
+
+.range-display {
+  background: linear-gradient(135deg, rgba(90,173,120,0.07) 0%, rgba(0,0,0,0.12) 100%), #111f17;
+  border: 1px solid #254d36;
+  border-radius: 12px;
+  padding: 12px 18px 10px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 0 rgba(90,173,120,0.08) inset;
+  display: flex; align-items: center; gap: 10px;
+}
+.range-display:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(90,173,120,0.12), 0 1px 0 rgba(90,173,120,0.08) inset;
+}
+.range-big-input {
+  background: none; border: none; outline: none;
+  font-size: 2.8rem; font-weight: 300;
+  color: var(--text); letter-spacing: -0.04em; line-height: 1;
+  width: 100%; min-width: 0;
+  font-family: inherit;
+  -moz-appearance: textfield;
+}
+.range-big-input::-webkit-outer-spin-button,
+.range-big-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.range-big-unit {
+  font-size: 1rem; color: var(--muted);
+  font-weight: 300; white-space: nowrap; flex-shrink: 0;
+}
+.range-sub { display: none; }
+
+.range-track-wrap {
+  padding: 8px 0 4px;
+  position: relative;
+}
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%; height: 6px;
+  background: #1a3524;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  border: none;
+  display: block;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  height: 6px;
+  background: #1a3524;
+  border-radius: 3px;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 44px; height: 44px;
+  background: radial-gradient(circle at 38% 35%, #a0eabb, #3a8a58 60%, #2a6640);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(90,173,120,0.25), 0 3px 12px rgba(0,0,0,0.5);
+  margin-top: -19px;
+}
+input[type=range]:active::-webkit-slider-thumb {
+  box-shadow: 0 0 0 8px rgba(90,173,120,0.15), 0 3px 14px rgba(0,0,0,0.5);
+}
+input[type=range]::-moz-range-thumb {
+  width: 44px; height: 44px;
+  background: var(--accent);
+  border: none; border-radius: 50%; cursor: pointer;
+}
+
+.range-marks { position: relative; height: 18px; margin-top: 10px; }
+.range-marks span {
+  position: absolute;
+  font-size: 0.6rem;
+  color: var(--muted2);
+  white-space: nowrap;
+}
+
+/* DIVIDER */
+.divider {
+  height: 1px; margin: 22px 0;
+  background: linear-gradient(90deg, transparent, #254d36 25%, #254d36 75%, transparent);
+}
+
+/* RESULT */
+.result-block {
+  background: linear-gradient(135deg, rgba(90,173,120,0.06) 0%, rgba(0,0,0,0.12) 100%), #111f17;
+  border: 1px solid #254d36;
+  border-radius: 14px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 1px 0 rgba(90,173,120,0.08) inset, 0 4px 16px rgba(0,0,0,0.3);
+}
+.result-row { display: flex; align-items: baseline; justify-content: space-between; }
+.result-lbl { font-size: 0.65rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.result-num { font-size: 2.4rem; font-weight: 300; letter-spacing: -0.04em; line-height: 1; color: var(--text); }
+.result-rub { font-size: 1.2rem; color: var(--muted); margin-left: 3px; }
+.result-hint { margin-top: 7px; font-size: 0.73rem; color: var(--muted); min-height: 1.2em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.disc-pill {
+  background: rgba(90,173,120,0.12); color: var(--accent-hi);
+  font-size: 0.65rem; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px;
+  border: 1px solid rgba(90,173,120,0.25);
+}
+
+/* BUTTONS */
+.btn-add {
+  width: 100%; margin-top: 14px;
+  background: linear-gradient(180deg, #3f8a58 0%, #2e6640 100%);
+  color: var(--text); border: none;
+  border-radius: 10px; padding: 14px;
+  font-family: inherit; font-size: 0.9rem; font-weight: 600;
+  cursor: pointer; letter-spacing: 0.01em;
+  box-shadow: 0 1px 0 rgba(120,210,150,0.2) inset, 0 4px 12px rgba(0,0,0,0.3);
+  transition: filter 0.12s, transform 0.08s;
+  -webkit-user-select: none; user-select: none;
+}
+.btn-add:active { transform: scale(0.97); filter: brightness(1.2); }
+.btn-add:disabled { background: linear-gradient(180deg, #1a3524, #142b1d); color: var(--muted2); box-shadow: none; }
+
+.btn-sm {
+  margin-top: 10px; width: 100%;
+  background: transparent; border: 1px solid var(--border2);
+  border-radius: 8px; padding: 11px 14px;
+  font-family: inherit; font-size: 0.82rem; color: var(--muted);
+  cursor: pointer; transition: all 0.15s;
+  -webkit-user-select: none; user-select: none;
+}
+.btn-sm:active { border-color: var(--accent-hi); color: var(--accent-hi); transform: scale(0.98); }
+.btn-sm:disabled { color: var(--border2); border-color: #111f17; }
+
+/* RANGE INPUT */
+
+
+/* SECTION */
+.section-title {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px; margin-top: 2px;
+}
+.section-title-badge {
+  background: linear-gradient(135deg, #2a5c3e 0%, #1a3a28 100%);
+  border: 1px solid rgba(90,173,120,0.35);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 0.78rem; font-weight: 600;
+  color: var(--accent-hi);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 1px 0 rgba(120,210,150,0.15) inset, 0 2px 8px rgba(0,0,0,0.25);
+  white-space: nowrap;
+  position: relative;
+}
+.section-title-badge::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--accent-hi);
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+  box-shadow: 0 0 6px rgba(90,173,120,0.7);
+  position: relative; top: -1px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(90,173,120,0.2), transparent); }
+
+/* UNLOAD BLOCKS */
+.unload-block {
+  background: linear-gradient(160deg, rgba(30,60,40,0.4) 0%, rgba(10,20,14,0.3) 100%), #111f17;
+  border: 1px solid var(--border2);
+  border-radius: 12px; padding: 16px 14px 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 0 rgba(90,173,120,0.05) inset;
+}
+.unload-result { margin-top: 8px; font-size: 0.78rem; color: var(--muted); min-height: 1.2em; }
+.unload-price { color: var(--accent-hi); font-weight: 600; }
+
+/* CART */
+.cart-wrap { margin-top: 22px; }
+.cart-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 0; border-bottom: 1px solid rgba(37,77,54,0.4);
+}
+.cart-item:last-child { border-bottom: none; }
+.ci-info { flex: 1; min-width: 0; }
+.ci-name { font-size: 0.84rem; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ci-meta { font-size: 0.68rem; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ci-price { font-size: 0.92rem; font-weight: 600; color: var(--accent-hi); white-space: nowrap; }
+.ci-rm {
+  background: none; border: none; color: var(--muted2);
+  font-size: 1.3rem; line-height: 1; padding: 4px 6px;
+  cursor: pointer; flex-shrink: 0;
+  -webkit-user-select: none; user-select: none;
+}
+.ci-rm:active { color: #e05555; }
+
+.cart-footer { margin-top: 16px; padding-top: 16px; border-top: 1px solid #3a7a52; display: flex; justify-content: space-between; align-items: baseline; }
+.cf-lbl { font-size: 0.65rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+.cf-val { font-size: 1.7rem; font-weight: 300; letter-spacing: -0.03em; color: var(--text); }
+
+.btn-pdf {
+  width: 100%; margin-top: 14px;
+  background: linear-gradient(180deg, #3f8a58 0%, #2e6640 100%);
+  border: none;
+  border-radius: 10px; padding: 14px;
+  font-family: inherit; font-size: 0.9rem;
+  font-weight: 600; color: #d4f0df;
+  cursor: pointer; letter-spacing: 0.02em;
+  box-shadow: 0 1px 0 rgba(120,210,150,0.2) inset, 0 4px 12px rgba(0,0,0,0.3);
+  transition: filter 0.12s, transform 0.08s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-pdf:active { transform: scale(0.97); filter: brightness(1.15); }
+
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 20px;
+  left: 50%; transform: translateX(-50%) translateY(30px);
+  width: calc(100% - 32px); max-width: 460px;
+  background: linear-gradient(135deg, #1c3e2a, #0f2318);
+  border: 1px solid #3a7a52;
+  border-radius: 14px; padding: 13px 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 1px 0 rgba(90,173,120,0.2) inset;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.28s cubic-bezier(.34,1.4,.64,1);
+  z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast-head { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+.toast-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-hi); box-shadow: 0 0 6px rgba(90,173,120,0.7); flex-shrink:0; }
+.toast-title { font-size: 0.68rem; font-weight: 600; color: var(--accent-hi); text-transform: uppercase; letter-spacing: 0.08em; }
+.toast-rows { display: flex; flex-direction: column; gap: 5px; }
+.toast-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.toast-name { font-size: 0.8rem; color: var(--text2); flex:1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toast-price { font-size: 0.82rem; font-weight: 600; color: var(--accent-hi); white-space: nowrap; }
+.toast-total { margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(58,122,82,0.35); display: flex; justify-content: space-between; align-items: baseline; }
+.toast-total-lbl { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.toast-total-val { font-size: 1.05rem; font-weight: 400; color: var(--text); }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Расчёт стоимости фрезеровки</h1>
+
+  <div class="field">
+    <span class="lbl">Материал</span>
+    <select id="selMat" onchange="onMat()">
+      <option value="">— выберите материал —</option>
+      <option value="pvc">ПВХ вспененный</option>
+      <option value="alu">Алюмокомпозит</option>
+      <option value="org">Оргстекло / Поликарбонат / ПНД</option>
+      <option value="orgs">Оргстекло со ступенькой</option>
+      <option value="fan">Фанера / МДФ</option>
+      <option value="mas">Массив / ДСП / ЛДСП</option>
+      <option value="txt">Текстолит</option>
+      <option value="met">Алюминий</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <span class="lbl">Толщина</span>
+    <select id="selThick" onchange="calc()" disabled>
+      <option value="">— сначала выберите материал —</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <span class="range-lbl">Длина реза</span>
+    <div class="range-display">
+      <input type="number" class="range-big-input" id="lenVal"
+        value="1" min="1" max="99999" inputmode="numeric"
+        oninput="onLenManual(this.value)">
+      <span class="range-big-unit">м/пог</span>
+    </div>
+    <div class="range-track-wrap">
+      <input type="range" id="lenSlider" min="1" max="1000" value="1" step="1"
+        oninput="onLen(this.value)" onchange="onLen(this.value)">
+    </div>
+    <div class="range-marks">
+      <span style="left:0">1 м</span>
+      <span style="left:19.9%;transform:translateX(-50%)">200 м</span>
+      <span style="right:0">1000 м</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="result-block">
+    <div class="result-row">
+      <span class="result-lbl">Итого</span>
+      <span class="result-num" id="resNum">—<span class="result-rub">₽</span></span>
+    </div>
+    <div class="result-hint" id="resHint"></div>
+    <button class="btn-add" id="btnAdd" onclick="addItem(this)">Добавить в смету</button>
+  </div>
+
+  <!-- РАЗГРУЗКА -->
+  <div style="margin-top:30px">
+    <div class="section-title"><span class="section-title-badge">Разгрузка материала</span></div>
+
+    <div class="unload-block">
+      <span class="lbl">Фанера — 3.5 ₽ × мм × листов</span>
+      <div class="two-col" style="margin-top:6px">
+        <div>
+          <span class="lbl" style="margin-bottom:5px">Толщина</span>
+          <select id="unFan" onchange="calcUn('fan')">
+            <option value="">— толщина —</option>
+                        <option value="0.5">0.5 мм</option>
+                        <option value="1">1 мм</option>
+                        <option value="2">2 мм</option>
+                        <option value="3">3 мм</option>
+                        <option value="4">4 мм</option>
+                        <option value="5">5 мм</option>
+                        <option value="6">6 мм</option>
+                        <option value="8">8 мм</option>
+                        <option value="9">9 мм</option>
+                        <option value="10">10 мм</option>
+                        <option value="12">12 мм</option>
+                        <option value="14">14 мм</option>
+                        <option value="15">15 мм</option>
+                        <option value="16">16 мм</option>
+                        <option value="18">18 мм</option>
+                        <option value="19">19 мм</option>
+                        <option value="20">20 мм</option>
+                        <option value="21">21 мм</option>
+                        <option value="22">22 мм</option>
+                        <option value="24">24 мм</option>
+                        <option value="25">25 мм</option>
+                        <option value="26">26 мм</option>
+                        <option value="27">27 мм</option>
+                        <option value="28">28 мм</option>
+                        <option value="29">29 мм</option>
+                        <option value="30">30 мм</option>
+                        <option value="31">31 мм</option>
+                        <option value="32">32 мм</option>
+                        <option value="33">33 мм</option>
+                        <option value="34">34 мм</option>
+                        <option value="35">35 мм</option>
+                        <option value="36">36 мм</option>
+                        <option value="37">37 мм</option>
+                        <option value="38">38 мм</option>
+          </select>
+        </div>
+        <div>
+          <span class="lbl" style="margin-bottom:5px">Кол-во листов</span>
+          <input type="number" class="num-input" id="unFanQty" placeholder="1" min="1" step="1" inputmode="numeric" oninput="calcUn('fan')">
+        </div>
+      </div>
+      <div class="unload-result" id="unFanRes"></div>
+      <button class="btn-sm" id="btnUnFan" onclick="addUn('fan',this)" disabled>Добавить в смету</button>
+    </div>
+
+    <div class="unload-block">
+      <span class="lbl">Листовые рекламные материалы — 17 ₽ × мм × листов</span>
+      <div class="two-col" style="margin-top:6px">
+        <div>
+          <span class="lbl" style="margin-bottom:5px">Толщина</span>
+          <select id="unAdv" onchange="calcUn('adv')">
+            <option value="">— толщина —</option>
+                        <option value="0.5">0.5 мм</option>
+                        <option value="1">1 мм</option>
+                        <option value="2">2 мм</option>
+                        <option value="3">3 мм</option>
+                        <option value="4">4 мм</option>
+                        <option value="5">5 мм</option>
+                        <option value="6">6 мм</option>
+                        <option value="8">8 мм</option>
+                        <option value="9">9 мм</option>
+                        <option value="10">10 мм</option>
+                        <option value="12">12 мм</option>
+                        <option value="14">14 мм</option>
+                        <option value="15">15 мм</option>
+                        <option value="16">16 мм</option>
+                        <option value="18">18 мм</option>
+                        <option value="19">19 мм</option>
+                        <option value="20">20 мм</option>
+                        <option value="21">21 мм</option>
+                        <option value="22">22 мм</option>
+                        <option value="24">24 мм</option>
+                        <option value="25">25 мм</option>
+                        <option value="26">26 мм</option>
+                        <option value="27">27 мм</option>
+                        <option value="28">28 мм</option>
+                        <option value="29">29 мм</option>
+                        <option value="30">30 мм</option>
+                        <option value="31">31 мм</option>
+                        <option value="32">32 мм</option>
+                        <option value="33">33 мм</option>
+                        <option value="34">34 мм</option>
+                        <option value="35">35 мм</option>
+                        <option value="36">36 мм</option>
+                        <option value="37">37 мм</option>
+                        <option value="38">38 мм</option>
+                        <option value="39">39 мм</option>
+                        <option value="40">40 мм</option>
+          </select>
+        </div>
+        <div>
+          <span class="lbl" style="margin-bottom:5px">Кол-во листов</span>
+          <input type="number" class="num-input" id="unAdvQty" placeholder="1" min="1" step="1" inputmode="numeric" oninput="calcUn('adv')">
+        </div>
+      </div>
+      <div class="unload-result" id="unAdvRes"></div>
+      <button class="btn-sm" id="btnUnAdv" onclick="addUn('adv',this)" disabled>Добавить в смету</button>
+    </div>
+
+    <div class="unload-block">
+      <span class="lbl">Инж. и конструкц. пластики — 15 ₽/кг</span>
+      <input type="number" class="num-input" id="unPlasticKg" placeholder="0 кг" min="0.1" step="0.1" inputmode="decimal" oninput="calcUn('plastic')" style="margin-top:6px">
+      <div class="unload-result" id="unPlasticRes"></div>
+      <button class="btn-sm" id="btnUnPlastic" onclick="addUn('plastic',this)" disabled>Добавить в смету</button>
+    </div>
+  </div>
+
+  <!-- СМЕТА -->
+  <div class="cart-wrap" id="cartWrap" style="display:none">
+    <div class="divider" style="margin-top:26px;margin-bottom:0"></div>
+    <div id="cartList"></div>
+    <div class="cart-footer">
+      <span class="cf-lbl">Итого по смете</span>
+      <span class="cf-val" id="cfVal">0 ₽</span>
+    </div>
+    <button class="btn-pdf" onclick="printPDF()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 11H12M4 8H12M8 1V9M5 6L8 9L11 6" stroke="#d4f0df" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="11" width="14" height="4" rx="1" stroke="#d4f0df" stroke-width="1.5"/></svg>Сохранить PDF</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-head">
+    <div class="toast-dot"></div>
+    <span class="toast-title">Добавлено в смету</span>
+  </div>
+  <div class="toast-rows" id="toastRows"></div>
+  <div class="toast-total">
+    <span class="toast-total-lbl">Итого</span>
+    <span class="toast-total-val" id="toastTotal">—</span>
+  </div>
+</div>
+
+<script>
+var P={pvc:{"0.5":[6.0, 5.1, 4.335],"1":[12, 10.2, 8.67],"2":[24, 20.4, 17.34],"3":[36, 30.6, 26.01],"4":[48, 40.8, 34.68],"5":[60, 51.0, 43.35],"6":[72, 61.2, 52.02],"8":[96, 81.6, 69.36],"9":[108, 91.8, 78.03],"10":[120, 102.0, 86.7],"12":[144, 122.4, 104.04],"14":[168, 142.8, 121.38],"15":[180, 153.0, 130.05],"16":[192, 163.2, 138.72],"18":[216, 183.6, 156.06],"19":[228, 193.8, 164.73],"20":[240, 204.0, 173.4],"21":[252, 214.2, 182.07],"22":[264, 224.4, 190.74],"24":[288, 244.8, 208.08],"25":[300, 255.0, 216.75],"26":[312, 265.2, 225.42],"27":[324, 275.4, 234.09],"28":[336, 285.6, 242.76],"29":[348, 295.8, 251.43],"30":[360, 306.0, 260.1],"31":[372, 316.2, 268.77],"32":[384, 326.4, 277.44],"33":[396, 336.6, 286.11],"34":[408, 346.8, 294.78],"35":[420, 357.0, 303.45],"36":[432, 367.2, 312.12],"37":[444, 377.4, 320.79],"38":[456, 387.6, 329.46],"39":[468, 397.8, 338.13],"40":[480, 408.0, 346.8]},alu:{"3":[60, 51, 43.35],"4":[67.5, 57.375, 48.769]},org:{"0.5":[7.5, 6.375, 5.419],"1":[15.0, 12.75, 10.838],"2":[30, 25.5, 21.675],"3":[45, 38.25, 32.513],"4":[57, 48.45, 41.183],"5":[67.688, 57.534, 48.904],"6":[77.164, 65.589, 55.751],"8":[92.854, 78.926, 67.087],"9":[101.559, 86.325, 73.376],"10":[110.264, 93.724, 79.666],"12":[125.701, 106.846, 90.819],"14":[139.318, 118.421, 100.657],"15":[145.289, 123.496, 104.971],"16":[151.26, 128.571, 109.285],"18":[161.659, 137.41, 116.799],"19":[166.149, 141.227, 120.043],"20":[170.64, 145.044, 123.287],"21":[176.612, 150.12, 127.602],"22":[182.585, 155.197, 131.918],"24":[194.53, 165.35, 140.548],"25":[201.014, 170.862, 145.233],"26":[207.499, 176.373, 149.918],"27":[213.983, 181.885, 154.603],"28":[220.467, 187.397, 159.287],"29":[226.951, 192.909, 163.972],"30":[233.435, 198.421, 168.657],"31":[239.92, 203.932, 173.342],"32":[246.404, 209.444, 178.027],"33":[252.179, 214.353, 182.2],"34":[257.954, 219.261, 186.372],"35":[263.729, 224.17, 190.544],"36":[269.505, 229.079, 194.717],"37":[275.28, 233.988, 198.889],"38":[281.055, 238.897, 203.062],"39":[286.83, 243.805, 207.234],"40":[292.605, 248.714, 211.407]},orgs:{"0.5":[10.875, 9.244, 7.857],"1":[21.75, 18.488, 15.714],"2":[43.5, 36.975, 31.429],"3":[60, 51, 43.35],"4":[76, 64.6, 54.91],"5":[90.25, 76.713, 65.206],"6":[102.885, 87.452, 74.334],"8":[123.805, 105.234, 89.449],"9":[135.411, 115.1, 97.835],"10":[147.018, 124.966, 106.221],"12":[167.601, 142.461, 121.092],"14":[185.758, 157.894, 134.21],"15":[193.719, 164.661, 139.962],"16":[201.68, 171.428, 145.714],"18":[215.545, 183.214, 155.731],"19":[221.532, 188.303, 160.057],"20":[227.52, 193.392, 164.383],"21":[235.483, 200.161, 170.137],"22":[243.447, 206.93, 175.89],"24":[259.373, 220.467, 187.397],"25":[268.019, 227.816, 193.643],"26":[276.664, 235.165, 199.89],"27":[285.31, 242.514, 206.136],"28":[293.956, 249.863, 212.383],"29":[302.602, 257.211, 218.63],"30":[311.248, 264.56, 224.876],"31":[319.893, 271.909, 231.123],"32":[328.539, 279.258, 237.369],"33":[336.239, 285.803, 242.932],"34":[343.939, 292.348, 248.496],"35":[351.639, 298.893, 254.059],"36":[359.339, 305.438, 259.623],"37":[367.04, 311.984, 265.186],"38":[374.74, 318.529, 270.749],"39":[382.44, 325.074, 276.313],"40":[390.14, 331.619, 281.876]},fan:{"0.5":[4.5, 3.825, 3.251],"1":[9.0, 7.65, 6.503],"2":[18, 15.3, 13.005],"3":[25.65, 21.803, 18.532],"4":[32.49, 27.617, 23.474],"5":[38.582, 32.795, 27.875],"6":[43.983, 37.386, 31.778],"8":[52.927, 44.988, 38.239],"9":[57.889, 49.206, 41.824],"10":[62.85, 53.423, 45.409],"12":[71.649, 60.902, 51.767],"14":[79.411, 67.5, 57.375],"15":[82.815, 70.392, 59.834],"16":[86.218, 73.285, 62.293],"18":[92.146, 78.324, 66.575],"19":[94.706, 80.499, 68.424],"20":[97.265, 82.675, 70.274],"21":[100.699, 85.594, 72.755],"22":[104.132, 88.512, 75.236],"24":[111, 94.35, 80.198],"25":[114.7, 97.495, 82.871],"26":[118.4, 100.64, 85.544],"27":[122.1, 103.785, 88.218],"28":[125.8, 106.93, 90.891],"29":[129.5, 110.075, 93.564],"30":[133.2, 113.22, 96.237],"31":[136.9, 116.365, 98.911],"32":[140.6, 119.51, 101.584],"33":[143.895, 122.311, 103.965],"34":[147.191, 125.112, 106.346],"35":[150.486, 127.913, 108.726],"36":[153.781, 130.714, 111.107],"37":[157.077, 133.515, 113.488],"38":[160.372, 136.316, 115.868],"39":[163.668, 139.117, 118.249],"40":[166.963, 141.918, 120.63]},mas:{"0.5":[6.75, 5.737, 4.877],"1":[13.5, 11.475, 9.754],"2":[27, 22.95, 19.508],"3":[38.475, 32.704, 27.798],"4":[48.735, 41.425, 35.211],"5":[57.873, 49.192, 41.813],"6":[65.975, 56.079, 47.667],"8":[79.39, 67.482, 57.359],"9":[86.833, 73.808, 62.737],"10":[94.276, 80.134, 68.114],"12":[107.474, 91.353, 77.65],"14":[119.117, 101.25, 86.062],"15":[124.222, 105.589, 89.75],"16":[129.327, 109.928, 93.439],"18":[138.218, 117.486, 99.863],"19":[142.058, 120.75, 102.637],"20":[145.897, 124.013, 105.411],"21":[151.004, 128.353, 109.1],"22":[156.11, 132.694, 112.79],"24":[166.323, 141.374, 120.168],"25":[171.867, 146.087, 124.174],"26":[177.411, 150.799, 128.179],"27":[182.955, 155.512, 132.185],"28":[188.5, 160.224, 136.19],"29":[194.044, 164.936, 140.196],"30":[199.588, 169.649, 144.202],"31":[205.132, 174.362, 148.207],"32":[210.676, 179.074, 152.213],"33":[215.614, 183.271, 155.78],"34":[220.551, 187.468, 159.348],"35":[225.489, 191.665, 162.915],"36":[230.426, 195.863, 166.483],"37":[235.364, 200.06, 170.05],"38":[240.302, 204.257, 173.618],"39":[245.239, 208.454, 177.185],"40":[250.177, 212.651, 180.753]},txt:{"0.5":[22.5,19.125,16.257],"1":[45.0,38.25,32.514],"2":[90.0,76.5,65.025],"3":[135.0,114.75,97.539],"4":[171.0,145.35,123.549],"5":[203.064,172.602,146.712],"6":[231.492,196.767,167.253],"8":[278.562,236.778,201.261],"9":[304.677,258.975,220.128],"10":[330.792,281.172,238.998],"12":[377.103,320.538,272.457],"14":[417.954,355.263,301.971],"15":[435.867,370.488,314.913],"16":[453.78,385.713,327.855],"18":[484.977,412.23,350.397],"19":[498.447,423.681,360.129],"20":[511.92,435.132,369.861],"21":[529.836,450.36,382.806],"22":[547.755,465.591,395.754],"24":[583.59,496.05,421.644],"25":[603.042,512.586,435.699],"26":[622.497,529.119,449.754],"27":[641.949,545.655,463.809],"28":[661.401,562.191,477.861],"29":[680.853,578.727,491.916],"30":[700.305,595.263,505.971],"31":[719.76,611.796,520.026],"32":[739.212,628.332,534.081],"33":[756.537,643.059,546.6],"34":[773.862,657.783,559.116],"35":[791.187,672.51,571.632],"36":[808.515,687.237,584.151],"37":[825.84,701.964,596.667],"38":[843.165,716.691,609.186],"39":[860.49,731.415,621.702],"40":[877.815,746.142,634.221]},met:{"0.5":[26.25, 22.312, 18.966],"1":[52.5, 44.625, 37.931],"2":[105, 89.25, 75.863],"3":[149.625, 127.181, 108.104],"4":[189.525, 161.096, 136.932],"5":[225.061, 191.302, 162.607],"6":[256.569, 218.084, 185.371],"8":[308.739, 262.428, 223.064],"9":[337.683, 287.03, 243.976],"10":[366.627, 311.633, 264.888],"12":[417.955, 355.262, 301.972],"14":[463.233, 393.748, 334.686],"15":[483.086, 410.623, 349.029],"16":[502.939, 427.498, 363.373],"18":[537.516, 456.889, 388.355],"19":[552.447, 469.58, 399.143],"20":[567.378, 482.271, 409.931],"21":[587.236, 499.151, 424.279],"22":[607.095, 516.03, 438.626],"24":[646.811, 549.789, 467.321],"25":[668.371, 568.115, 482.898],"26":[689.932, 586.442, 498.476],"27":[711.492, 604.768, 514.053],"28":[733.053, 623.094, 529.63],"29":[754.613, 641.421, 545.208],"30":[776.173, 659.747, 560.785],"31":[797.734, 678.074, 576.363],"32":[819.294, 696.4, 591.94],"33":[838.496, 712.722, 605.814],"34":[857.698, 729.044, 619.687],"35":[876.901, 745.366, 633.561],"36":[896.103, 761.688, 647.435],"37":[915.305, 778.009, 661.308],"38":[934.508, 794.331, 675.182],"39":[953.71, 810.653, 689.055],"40":[972.912, 826.975, 702.929]}};
+var TK={pvc:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],alu:["3","4"],org:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],orgs:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],fan:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],mas:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],txt:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],met:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"]};
+var TL={pvc:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],alu:["3 мм","4 мм"],org:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],orgs:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],fan:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],mas:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],txt:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],met:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"]};
+var MN={pvc:"ПВХ вспен.",alu:"Алюмоком.",org:"Оргстекло",orgs:"Орг.со ступ.",fan:"Фанера/МДФ",mas:"Массив/ДСП",txt:"Текстолит",met:"Алюминий"};
+
+var meters=1,cart=[],toastTimer=null;
+
+function fmtN(n){return Math.round(n).toLocaleString("ru-RU");}
+function fmtP(n){return n%1===0?String(n):n.toFixed(2);}
+
+function getPrice(mat,key){
+  var p=P[mat]&&P[mat][key]; if(!p) return null;
+  if(meters>=1000) return{per:p[2],tier:"от 1000 м/пог"};
+  if(meters>=200) return{per:p[1],tier:"от 200 м/пог"};
+  return{per:p[0],tier:null};
+}
+
+function onMat(){
+  var mat=document.getElementById("selMat").value;
+  var sel=document.getElementById("selThick");
+  if(!mat){
+    sel.innerHTML='<option value="">— сначала выберите материал —</option>';
+    sel.disabled=true;
+  } else {
+    var opts='<option value="">— толщина —</option>';
+    for(var i=0;i<TK[mat].length;i++) opts+='<option value="'+TK[mat][i]+'">'+TL[mat][i]+'</option>';
+    sel.innerHTML=opts;
+    sel.disabled=false;
+  }
+  setTimeout(calc,0);
+}
+
+function onLen(v){
+  meters=parseInt(v)||1;
+  var inp=document.getElementById("lenVal");
+  if(document.activeElement!==inp) inp.value=meters;
+  document.getElementById("lenSlider").value=Math.min(meters,1000);
+  calc();
+}
+function onLenManual(v){
+  var val=parseInt(v)||1;
+  if(val<1) val=1;
+  meters=val;
+  document.getElementById("lenSlider").value=Math.min(meters,1000);
+  calc();
+}
+
+function calc(){
+  var mat=document.getElementById("selMat").value;
+  var key=document.getElementById("selThick").value;
+  var btn=document.getElementById("btnAdd");
+  function setBtn(on){
+    btn.disabled=!on;
+    btn.style.pointerEvents=on?'auto':'none';
+    btn.style.opacity=on?'1':'';
+  }
+  if(!mat||!key){
+    document.getElementById("resNum").innerHTML='—<span class="result-rub">₽</span>';
+    document.getElementById("resHint").innerHTML="";
+    setBtn(false); return;
+  }
+  var r=getPrice(mat,key); if(!r){setBtn(false);return;}
+  var total=r.per*meters;
+  document.getElementById("resNum").innerHTML=fmtN(total)+'<span class="result-rub">₽</span>';
+  var hint=fmtP(r.per)+" ₽/м × "+meters+" м";
+  if(r.tier) hint+=' <span class="disc-pill">'+r.tier+"</span>";
+  document.getElementById("resHint").innerHTML=hint;
+  setBtn(true);
+}
+
+function addItem(btn){
+  var mat=document.getElementById("selMat").value;
+  var key=document.getElementById("selThick").value;
+  var tl=document.getElementById("selThick").options[document.getElementById("selThick").selectedIndex].text;
+  var r=getPrice(mat,key); if(!r) return;
+  cart.push({id:Date.now(),mat:mat,tl:tl,meters:meters,per:r.per,tier:r.tier,total:r.per*meters});
+  renderCart(); showToast(); bump(btn);
+}
+
+function calcUn(type){
+  if(type==="fan"){
+    var mm=parseInt(document.getElementById("unFan").value);
+    var qty=parseInt(document.getElementById("unFanQty").value)||0;
+    var res=document.getElementById("unFanRes"),btn=document.getElementById("btnUnFan");
+    if(!mm||qty<1){res.innerHTML="";btn.disabled=true;return;}
+    res.innerHTML='<span class="unload-price">'+fmtN(mm*3.5*qty)+' ₽</span> — '+mm+' мм × 3.5 ₽ × '+qty+' л.';
+    btn.disabled=false;
+  } else if(type==="adv"){
+    var mm=parseInt(document.getElementById("unAdv").value);
+    var qty=parseInt(document.getElementById("unAdvQty").value)||0;
+    var res=document.getElementById("unAdvRes"),btn=document.getElementById("btnUnAdv");
+    if(!mm||qty<1){res.innerHTML="";btn.disabled=true;return;}
+    res.innerHTML='<span class="unload-price">'+fmtN(mm*17*qty)+' ₽</span> — '+mm+' мм × 17 ₽ × '+qty+' л.';
+    btn.disabled=false;
+  } else {
+    var kg=parseFloat(document.getElementById("unPlasticKg").value);
+    var res=document.getElementById("unPlasticRes"),btn=document.getElementById("btnUnPlastic");
+    if(!kg||kg<=0){res.innerHTML="";btn.disabled=true;return;}
+    res.innerHTML='<span class="unload-price">'+fmtN(kg*15)+' ₽</span> — '+kg+' кг × 15 ₽';
+    btn.disabled=false;
+  }
+}
+
+function addUn(type,btn){
+  if(type==="fan"){
+    var mm=parseInt(document.getElementById("unFan").value);
+    var qty=parseInt(document.getElementById("unFanQty").value)||0;
+    if(!mm||qty<1) return;
+    cart.push({id:Date.now(),label:"Разгрузка фанеры",meta:mm+" мм × 3.5 ₽/мм × "+qty+" л.",total:mm*3.5*qty});
+  } else if(type==="adv"){
+    var mm=parseInt(document.getElementById("unAdv").value);
+    var qty=parseInt(document.getElementById("unAdvQty").value)||0;
+    if(!mm||qty<1) return;
+    cart.push({id:Date.now(),label:"Разгрузка листовых рекл. материалов",meta:mm+" мм × 17 ₽/мм × "+qty+" л.",total:mm*17*qty});
+  } else {
+    var kg=parseFloat(document.getElementById("unPlasticKg").value);
+    if(!kg||kg<=0) return;
+    cart.push({id:Date.now(),label:"Разгрузка инж. пластиков",meta:kg+" кг × 15 ₽/кг",total:kg*15});
+  }
+  renderCart(); showToast(); bump(btn);
+}
+
+function removeItem(id){
+  cart=cart.filter(function(c){return c.id!==id;});
+  renderCart();
+}
+
+function renderCart(){
+  var wrap=document.getElementById("cartWrap");
+  if(!cart.length){wrap.style.display="none";return;}
+  wrap.style.display="block";
+  var html="";
+  for(var i=0;i<cart.length;i++){
+    var c=cart[i];
+    var name=c.label||(MN[c.mat]+", "+c.tl);
+    var meta=c.meta||(c.meters+" м × "+fmtP(c.per)+" ₽"+(c.tier?" · "+c.tier:""));
+    html+='<div class="cart-item"><div class="ci-info"><div class="ci-name">'+name+'</div><div class="ci-meta">'+meta+'</div></div><div class="ci-price">'+fmtN(c.total)+' ₽</div><button class="ci-rm" onclick="removeItem('+c.id+')">×</button></div>';
+  }
+  document.getElementById("cartList").innerHTML=html;
+  var total=cart.reduce(function(s,c){return s+c.total;},0);
+  document.getElementById("cfVal").textContent=fmtN(total)+" ₽";
+}
+
+function showToast(){
+  if(navigator.vibrate) navigator.vibrate([6,20,6]);
+  var el=document.getElementById("toast");
+  var rowsEl=document.getElementById("toastRows");
+  var totalEl=document.getElementById("toastTotal");
+  var last=cart.slice(-3).reverse();
+  var html="";
+  for(var i=0;i<last.length;i++){
+    var c=last[i];
+    var name=c.label||(MN[c.mat]+", "+c.tl);
+    html+='<div class="toast-row"><span class="toast-name">'+name+'</span><span class="toast-price">'+fmtN(c.total)+' ₽</span></div>';
+  }
+  rowsEl.innerHTML=html;
+  var total=cart.reduce(function(s,c){return s+c.total;},0);
+  totalEl.textContent=fmtN(total)+" ₽";
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove("show");},2800);
+}
+
+function bump(btn){
+  if(!btn) return;
+  btn.style.transition="transform 0.07s, filter 0.07s";
+  btn.style.transform="scale(0.95)";
+  btn.style.filter="brightness(1.4)";
+  setTimeout(function(){btn.style.transform="";btn.style.filter="";},130);
+}
+
+function printPDF(){
+  if(!cart.length){alert("Смета пуста");return;}
+  var total=cart.reduce(function(s,c){return s+c.total;},0);
+  var date=new Date().toLocaleDateString("ru-RU");
+  var rows="";
+  for(var i=0;i<cart.length;i++){
+    var c=cart[i];
+    var name=c.label||(MN[c.mat]+", "+c.tl);
+    var meta=c.meta||(c.meters+" м × "+fmtP(c.per)+" ₽"+(c.tier?" ("+c.tier+")":""));
+    rows+="<tr><td>"+(i+1)+"</td><td>"+name+"</td><td>"+meta+"</td><td>"+fmtN(c.total)+" ₽</td></tr>";
+  }
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+    +'<title>Смета</title>'
+    +'<style>'
+    +'*{margin:0;padding:0;box-sizing:border-box}'
+    +'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#222;padding:20px;background:#fff}'
+    +'.ph{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:12px;margin-bottom:18px;border-bottom:2px solid #1a6e3a}'
+    +'.plogo{font-size:1.4rem;font-weight:700;color:#1a6e3a;text-transform:uppercase;letter-spacing:.04em}'
+    +'.pdate{font-size:.9rem;color:#888}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:12px}'
+    +'th{background:#f0f8f3;padding:10px 12px;text-align:left;font-size:.8rem;font-weight:700;color:#1a6e3a;text-transform:uppercase;letter-spacing:.05em}'
+    +'th:last-child,td:last-child{text-align:right}'
+    +'td{padding:10px 12px;border-bottom:1px solid #e8f4ec;font-size:.95rem}'
+    +'.ptotal{display:flex;justify-content:flex-end;gap:14px;align-items:baseline;padding-top:14px;border-top:2px solid #1a6e3a;margin-top:6px}'
+    +'.ptl{font-size:.8rem;color:#888;text-transform:uppercase;letter-spacing:.08em}'
+    +'.ptv{font-size:1.8rem;font-weight:400;color:#1a6e3a}'
+    +'.savebtn{display:block;width:100%;margin-top:24px;padding:16px;background:#2e6640;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;text-align:center}'
+    +'@media print{.savebtn{display:none}}'
+    +'</style></head><body>'
+    +'<div class="ph"><span class="plogo">Портальный ЧПУ</span><span class="pdate">'+date+'</span></div>'
+    +'<table><thead><tr><th>#</th><th>Наименование</th><th>Параметры</th><th>Сумма</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table>'
+    +'<div class="ptotal"><span class="ptl">Итого к оплате</span><span class="ptv">'+fmtN(total)+' ₽</span></div>'
+    +'<button class="savebtn" onclick="window.print()">Сохранить PDF</button>'
+    +'</body></html>';
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  window.open(url,'_blank');
+}
+</script>
+</body>
+</html>
