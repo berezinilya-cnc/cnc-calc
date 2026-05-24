@@ -985,7 +985,6 @@ function initDrums(){
         if(!mDown) return;
         mDown = false;
         if(Math.abs(mOffset) < 4){
-          // it was a click, not a drag
           openDrumInput();
           return;
         }
@@ -996,9 +995,57 @@ function initDrums(){
         fling(mVel);
       });
 
+      // колесико мыши
+      el.addEventListener('wheel', function(e){
+        e.preventDefault();
+        var delta = e.deltaY > 0 ? 1 : -1;
+        drumDigits[idx] = ((drumDigits[idx] + delta) % 10 + 10) % 10;
+        positionStrip(idx, drumDigits[idx], 0);
+        if(navigator.vibrate) navigator.vibrate(4);
+        meters = drumValue();
+        document.getElementById('drumsTotal').textContent = meters;
+        var lv = document.getElementById('lenVal');
+        if(lv) lv.value = meters;
+        calc();
+      }, {passive: false});
+
     })(i);
   }
   // tap handled in touchend of each drum (see _didDrag flag)
+
+  // wheel on entire drums-wrap — catches any missed drum events
+  var wrap = document.querySelector('.drums-wrap');
+  if(wrap){
+    wrap.addEventListener('wheel', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      // figure out which drum the mouse is over
+      var drums = [
+        document.getElementById('drum3'),
+        document.getElementById('drum2'),
+        document.getElementById('drum1'),
+        document.getElementById('drum0')
+      ];
+      var target = e.target;
+      // walk up to find drum
+      while(target && target !== wrap){
+        for(var d=0;d<drums.length;d++){
+          if(drums[d] && (drums[d] === target || drums[d].contains(target))){
+            var delta = e.deltaY > 0 ? 1 : -1;
+            drumDigits[d] = ((drumDigits[d] + delta) % 10 + 10) % 10;
+            positionStrip(d, drumDigits[d], 0);
+            meters = drumValue();
+            document.getElementById('drumsTotal').textContent = meters;
+            var lv = document.getElementById('lenVal');
+            if(lv) lv.value = meters;
+            calc();
+            return;
+          }
+        }
+        target = target.parentElement;
+      }
+    }, {passive: false});
+  }
 }
 
 function openDrumInput(){
@@ -1478,7 +1525,13 @@ function parseDXF(text, filename){
 }
 
 
-window.addEventListener("load", function(){ initDrums(); });
+// init drums - multiple fallbacks
+if(document.readyState === "complete" || document.readyState === "interactive"){
+  setTimeout(initDrums, 0);
+} else {
+  document.addEventListener("DOMContentLoaded", initDrums);
+}
+window.addEventListener("load", initDrums);
 </script>
 
 <!-- MODAL: ATTACH FILE -->
