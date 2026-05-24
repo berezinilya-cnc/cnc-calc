@@ -3,9 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a1a10">
+<meta name="application-name" content="ЧПУ Калькулятор">
+<meta name="apple-mobile-web-app-title" content="ЧПУ Калькулятор">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="#" id="manifest-placeholder">
 <title>ЧПУ Калькулятор</title>
 <style>
 :root {
@@ -62,6 +65,28 @@ h1 {
 /* FIELDS */
 .field { margin-bottom: 18px; }
 
+.discount-bar {
+  display: flex; gap: 8px; align-items: center;
+  background: rgba(90,173,120,0.05);
+  border: 1px solid var(--border2);
+  border-radius: 10px; padding: 10px 12px;
+  margin-bottom: 22px;
+}
+.discount-bar input {
+  flex: 1; background: none; border: none; outline: none;
+  font-family: inherit; font-size: 0.95rem;
+  color: var(--text2); letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.discount-bar input::placeholder { color: var(--muted2); text-transform: none; letter-spacing: 0; }
+.discount-badge {
+  font-size: 0.7rem; font-weight: 600; padding: 3px 9px;
+  border-radius: 20px; white-space: nowrap;
+  background: rgba(90,173,120,0.15); color: var(--accent-hi);
+  border: 1px solid rgba(90,173,120,0.3); display: none;
+}
+.discount-badge.show { display: inline-block; }
+
 .lbl {
   display: block;
   font-size: 0.65rem;
@@ -106,6 +131,85 @@ select option { background: #1a3524; color: var(--text2); }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 /* RANGE */
+.btn-attach {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: inherit; font-size: 0.78rem; font-weight: 500;
+  color: var(--muted);
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: all 0.15s;
+}
+.btn-attach:active { border-color: var(--accent-hi); color: var(--accent-hi); transform: scale(0.97); }
+.btn-attach svg { flex-shrink: 0; }
+
+/* MODAL */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.7);
+  align-items: flex-end; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  background: linear-gradient(175deg, #1c3e2a, #0f2318);
+  border: 1px solid rgba(90,173,120,0.25);
+  border-radius: 18px 18px 0 0;
+  width: 100%; max-width: 500px;
+  padding: 24px 20px 36px;
+  box-shadow: 0 -4px 32px rgba(0,0,0,0.5);
+  animation: slideUp 0.25s cubic-bezier(.34,1.2,.64,1);
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-title {
+  font-size: 0.85rem; font-weight: 600; color: var(--accent-hi);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.modal-sub { font-size: 0.75rem; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+.modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.modal-file-btn {
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 12px;
+  font-family: inherit; font-size: 0.8rem; font-weight: 600;
+  color: var(--text2); cursor: pointer; text-align: center;
+  transition: all 0.15s; line-height: 1.4;
+}
+.modal-file-btn:active { border-color: var(--accent-hi); color: var(--accent-hi); transform: scale(0.97); }
+.modal-file-ext { display: block; font-size: 1.1rem; color: var(--accent-hi); margin-bottom: 4px; }
+.modal-result {
+  background: rgba(90,173,120,0.08);
+  border: 1px solid rgba(90,173,120,0.2);
+  border-radius: 10px; padding: 14px 16px;
+  display: none; margin-bottom: 14px;
+}
+.modal-result.show { display: block; }
+.modal-result-lbl { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.modal-result-val { font-size: 1.6rem; font-weight: 300; color: var(--text); letter-spacing: -0.02em; }
+.modal-result-val small { font-size: 0.85rem; color: var(--muted); margin-left: 4px; }
+.modal-result-detail { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+.modal-apply {
+  width: 100%;
+  background: linear-gradient(180deg, #3f8a58, #2e6640);
+  color: var(--text); border: none; border-radius: 10px;
+  padding: 13px; font-family: inherit; font-size: 0.88rem; font-weight: 600;
+  cursor: pointer; display: none;
+  box-shadow: 0 1px 0 rgba(120,210,150,0.2) inset;
+  transition: filter 0.12s, transform 0.08s;
+}
+.modal-apply.show { display: block; }
+.modal-apply:active { transform: scale(0.98); filter: brightness(1.15); }
+.modal-cancel {
+  width: 100%; margin-top: 10px;
+  background: transparent; border: 1px solid var(--border2);
+  border-radius: 10px; padding: 12px;
+  font-family: inherit; font-size: 0.84rem; color: var(--muted);
+  cursor: pointer; transition: all 0.15s;
+}
+.modal-cancel:active { color: var(--text); }
+
 .range-lbl { font-size: 0.65rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; display: block; }
 
 .range-display {
@@ -342,11 +446,76 @@ input[type=range]::-moz-range-thumb {
 .toast-total { margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(58,122,82,0.35); display: flex; justify-content: space-between; align-items: baseline; }
 .toast-total-lbl { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
 .toast-total-val { font-size: 1.05rem; font-weight: 400; color: var(--text); }
+
+/* Install banner */
+.install-banner {
+  display: none;
+  position: fixed; bottom: 80px; left: 12px; right: 12px;
+  background: linear-gradient(135deg, #1c3e2a, #0f2318);
+  border: 1px solid #3a7a52;
+  border-radius: 14px; padding: 14px 16px;
+  z-index: 998; gap: 12px;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  animation: slideUp 0.3s ease;
+}
+.install-banner.visible { display: flex; }
+@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+.install-text { flex:1; font-size:0.82rem; color: var(--text2); line-height:1.4; }
+.install-text strong { color: var(--accent-hi); display:block; margin-bottom:2px; font-size:0.85rem; }
+.install-btn {
+  background: linear-gradient(180deg, #3f8a58, #2e6640);
+  color: #d4f0df; border: none; border-radius: 8px;
+  padding: 9px 16px; font-family: inherit;
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.install-close {
+  background: none; border: none; color: var(--muted);
+  font-size: 1.3rem; cursor: pointer; padding: 0 2px; line-height:1;
+}
+
+
+/* Install banner */
+.install-banner {
+  display: none;
+  position: fixed; bottom: 80px; left: 12px; right: 12px;
+  background: linear-gradient(135deg, #1c3e2a, #0f2318);
+  border: 1px solid #3a7a52;
+  border-radius: 14px; padding: 14px 16px;
+  z-index: 998; gap: 12px;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  animation: slideUp 0.3s ease;
+}
+.install-banner.visible { display: flex; }
+@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+.install-text { flex:1; font-size:0.82rem; color: var(--text2); line-height:1.4; }
+.install-text strong { color: var(--accent-hi); display:block; margin-bottom:2px; font-size:0.85rem; }
+.install-btn {
+  background: linear-gradient(180deg, #3f8a58, #2e6640);
+  color: #d4f0df; border: none; border-radius: 8px;
+  padding: 9px 16px; font-family: inherit;
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.install-close {
+  background: none; border: none; color: var(--muted);
+  font-size: 1.3rem; cursor: pointer; padding: 0 2px; line-height:1;
+}
 </style>
 </head>
 <body>
 <div class="card">
   <h1>Расчёт стоимости фрезеровки</h1>
+
+  <div class="discount-bar">
+    <input type="text" id="discountCode" placeholder="Код скидки" maxlength="20"
+      oninput="applyDiscount(this.value)">
+    <span class="discount-badge" id="discountBadge">−10%</span>
+  </div>
 
   <div class="field">
     <span class="lbl">Материал</span>
@@ -371,7 +540,15 @@ input[type=range]::-moz-range-thumb {
   </div>
 
   <div class="field">
-    <span class="range-lbl">Длина реза</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <span class="range-lbl" style="margin-bottom:0">Длина реза</span>
+      <button class="btn-attach" onclick="openAttachModal()">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+          <path d="M13.5 7.5L7.5 13.5C6.7 14.3 5.6 14.7 4.5 14.7C3.4 14.7 2.3 14.3 1.5 13.5C-0.1 11.9-0.1 9.3 1.5 7.7L8 1.2C9 0.2 10.6 0.2 11.6 1.2C12.6 2.2 12.6 3.8 11.6 4.8L5.1 11.3C4.6 11.8 3.8 11.8 3.3 11.3C2.8 10.8 2.8 10 3.3 9.5L9.3 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Прикрепить контур
+      </button>
+    </div>
     <div class="range-display">
       <input type="number" class="range-big-input" id="lenVal"
         value="1" min="1" max="99999" inputmode="numeric"
@@ -405,116 +582,76 @@ input[type=range]::-moz-range-thumb {
     <div class="section-title"><span class="section-title-badge">Разгрузка материала</span></div>
 
     <div class="unload-block">
-      <span class="lbl">Фанера — 3.5 ₽ × мм × листов</span>
-      <div class="two-col" style="margin-top:6px">
-        <div>
-          <span class="lbl" style="margin-bottom:5px">Толщина</span>
-          <select id="unFan" onchange="calcUn('fan')">
-            <option value="">— толщина —</option>
-                        <option value="0.5">0.5 мм</option>
-                        <option value="1">1 мм</option>
-                        <option value="2">2 мм</option>
-                        <option value="3">3 мм</option>
-                        <option value="4">4 мм</option>
-                        <option value="5">5 мм</option>
-                        <option value="6">6 мм</option>
-                        <option value="8">8 мм</option>
-                        <option value="9">9 мм</option>
-                        <option value="10">10 мм</option>
-                        <option value="12">12 мм</option>
-                        <option value="14">14 мм</option>
-                        <option value="15">15 мм</option>
-                        <option value="16">16 мм</option>
-                        <option value="18">18 мм</option>
-                        <option value="19">19 мм</option>
-                        <option value="20">20 мм</option>
-                        <option value="21">21 мм</option>
-                        <option value="22">22 мм</option>
-                        <option value="24">24 мм</option>
-                        <option value="25">25 мм</option>
-                        <option value="26">26 мм</option>
-                        <option value="27">27 мм</option>
-                        <option value="28">28 мм</option>
-                        <option value="29">29 мм</option>
-                        <option value="30">30 мм</option>
-                        <option value="31">31 мм</option>
-                        <option value="32">32 мм</option>
-                        <option value="33">33 мм</option>
-                        <option value="34">34 мм</option>
-                        <option value="35">35 мм</option>
-                        <option value="36">36 мм</option>
-                        <option value="37">37 мм</option>
-                        <option value="38">38 мм</option>
-          </select>
-        </div>
-        <div>
-          <span class="lbl" style="margin-bottom:5px">Кол-во листов</span>
-          <input type="number" class="num-input" id="unFanQty" placeholder="1" min="1" step="1" inputmode="numeric" oninput="calcUn('fan')">
-        </div>
+      <div class="field" style="margin-bottom:14px">
+        <span class="lbl">Тип материала</span>
+        <select id="unType" onchange="onUnType()">
+          <option value="">— выберите тип —</option>
+          <option value="fan">Фанера — 3.5 ₽/мм × листов</option>
+          <option value="adv">Листовые рекламные — 17 ₽/мм × листов</option>
+          <option value="plastic">Инж. и конструкц. пластики — 15 ₽/кг</option>
+        </select>
       </div>
-      <div class="unload-result" id="unFanRes"></div>
-      <button class="btn-sm" id="btnUnFan" onclick="addUn('fan',this)" disabled>Добавить в смету</button>
-    </div>
 
-    <div class="unload-block">
-      <span class="lbl">Листовые рекламные материалы — 17 ₽ × мм × листов</span>
-      <div class="two-col" style="margin-top:6px">
-        <div>
-          <span class="lbl" style="margin-bottom:5px">Толщина</span>
-          <select id="unAdv" onchange="calcUn('adv')">
-            <option value="">— толщина —</option>
-                        <option value="0.5">0.5 мм</option>
-                        <option value="1">1 мм</option>
-                        <option value="2">2 мм</option>
-                        <option value="3">3 мм</option>
-                        <option value="4">4 мм</option>
-                        <option value="5">5 мм</option>
-                        <option value="6">6 мм</option>
-                        <option value="8">8 мм</option>
-                        <option value="9">9 мм</option>
-                        <option value="10">10 мм</option>
-                        <option value="12">12 мм</option>
-                        <option value="14">14 мм</option>
-                        <option value="15">15 мм</option>
-                        <option value="16">16 мм</option>
-                        <option value="18">18 мм</option>
-                        <option value="19">19 мм</option>
-                        <option value="20">20 мм</option>
-                        <option value="21">21 мм</option>
-                        <option value="22">22 мм</option>
-                        <option value="24">24 мм</option>
-                        <option value="25">25 мм</option>
-                        <option value="26">26 мм</option>
-                        <option value="27">27 мм</option>
-                        <option value="28">28 мм</option>
-                        <option value="29">29 мм</option>
-                        <option value="30">30 мм</option>
-                        <option value="31">31 мм</option>
-                        <option value="32">32 мм</option>
-                        <option value="33">33 мм</option>
-                        <option value="34">34 мм</option>
-                        <option value="35">35 мм</option>
-                        <option value="36">36 мм</option>
-                        <option value="37">37 мм</option>
-                        <option value="38">38 мм</option>
-                        <option value="39">39 мм</option>
-                        <option value="40">40 мм</option>
-          </select>
+      <!-- Блок: Фанера или Листовые -->
+      <div id="unSheetBlock" style="display:none">
+        <div class="two-col">
+          <div>
+            <span class="lbl" style="margin-bottom:5px">Толщина</span>
+            <select id="unSheetMm" onchange="calcUnSheet()">
+              <option value="">— мм —</option>
+              <option value="0.5">0.5 мм</option>
+              <option value="1">1 мм</option>
+              <option value="2">2 мм</option>
+              <option value="3">3 мм</option>
+              <option value="4">4 мм</option>
+              <option value="5">5 мм</option>
+              <option value="6">6 мм</option>
+              <option value="8">8 мм</option>
+              <option value="9">9 мм</option>
+              <option value="10">10 мм</option>
+              <option value="12">12 мм</option>
+              <option value="14">14 мм</option>
+              <option value="15">15 мм</option>
+              <option value="16">16 мм</option>
+              <option value="18">18 мм</option>
+              <option value="19">19 мм</option>
+              <option value="20">20 мм</option>
+              <option value="21">21 мм</option>
+              <option value="22">22 мм</option>
+              <option value="24">24 мм</option>
+              <option value="25">25 мм</option>
+              <option value="26">26 мм</option>
+              <option value="27">27 мм</option>
+              <option value="28">28 мм</option>
+              <option value="29">29 мм</option>
+              <option value="30">30 мм</option>
+              <option value="31">31 мм</option>
+              <option value="32">32 мм</option>
+              <option value="33">33 мм</option>
+              <option value="34">34 мм</option>
+              <option value="35">35 мм</option>
+              <option value="36">36 мм</option>
+              <option value="37">37 мм</option>
+              <option value="38">38 мм</option>
+              <option value="39">39 мм</option>
+              <option value="40">40 мм</option>
+            </select>
+          </div>
+          <div>
+            <span class="lbl" style="margin-bottom:5px">Кол-во листов</span>
+            <input type="number" class="num-input" id="unSheetQty" placeholder="1" min="1" step="1" inputmode="numeric" oninput="calcUnSheet()">
+          </div>
         </div>
-        <div>
-          <span class="lbl" style="margin-bottom:5px">Кол-во листов</span>
-          <input type="number" class="num-input" id="unAdvQty" placeholder="1" min="1" step="1" inputmode="numeric" oninput="calcUn('adv')">
-        </div>
+        <div class="unload-result" id="unSheetRes"></div>
+        <button class="btn-sm" id="btnUnSheet" onclick="addUnSheet(this)" disabled>Добавить в смету</button>
       </div>
-      <div class="unload-result" id="unAdvRes"></div>
-      <button class="btn-sm" id="btnUnAdv" onclick="addUn('adv',this)" disabled>Добавить в смету</button>
-    </div>
 
-    <div class="unload-block">
-      <span class="lbl">Инж. и конструкц. пластики — 15 ₽/кг</span>
-      <input type="number" class="num-input" id="unPlasticKg" placeholder="0 кг" min="0.1" step="0.1" inputmode="decimal" oninput="calcUn('plastic')" style="margin-top:6px">
-      <div class="unload-result" id="unPlasticRes"></div>
-      <button class="btn-sm" id="btnUnPlastic" onclick="addUn('plastic',this)" disabled>Добавить в смету</button>
+      <!-- Блок: Пластики -->
+      <div id="unPlasticBlock" style="display:none">
+        <input type="number" class="num-input" id="unPlasticKg" placeholder="0 кг" min="0.1" step="0.1" inputmode="decimal" oninput="calcUnPlastic()" style="margin-top:6px">
+        <div class="unload-result" id="unPlasticRes"></div>
+        <button class="btn-sm" id="btnUnPlastic" onclick="addUnPlastic(this)" disabled>Добавить в смету</button>
+      </div>
     </div>
   </div>
 
@@ -522,6 +659,7 @@ input[type=range]::-moz-range-thumb {
   <div class="cart-wrap" id="cartWrap" style="display:none">
     <div class="divider" style="margin-top:26px;margin-bottom:0"></div>
     <div id="cartList"></div>
+    <div id="cartMinNote" style="display:none;font-size:0.7rem;color:#f5a623;margin-top:8px;padding:6px 2px">* минимальная сумма по резке — 1500 ₽</div>
     <div class="cart-footer">
       <span class="cf-lbl">Итого по смете</span>
       <span class="cf-val" id="cfVal">0 ₽</span>
@@ -529,6 +667,7 @@ input[type=range]::-moz-range-thumb {
     <button class="btn-pdf" onclick="printPDF()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 11H12M4 8H12M8 1V9M5 6L8 9L11 6" stroke="#d4f0df" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="11" width="14" height="4" rx="1" stroke="#d4f0df" stroke-width="1.5"/></svg>Сохранить PDF</button>
   </div>
 </div>
+
 
 <!-- TOAST -->
 <div class="toast" id="toast">
@@ -548,6 +687,17 @@ var P={pvc:{"0.5":[6.0, 5.1, 4.335],"1":[12, 10.2, 8.67],"2":[24, 20.4, 17.34],"
 var TK={pvc:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],alu:["3","4"],org:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],orgs:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],fan:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],mas:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],txt:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"],met:["0.5","1","2","3","4","5","6","8","9","10","12","14","15","16","18","19","20","21","22","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40"]};
 var TL={pvc:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],alu:["3 мм","4 мм"],org:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],orgs:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],fan:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],mas:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],txt:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"],met:["0.5 мм","1 мм","2 мм","3 мм","4 мм","5 мм","6 мм","8 мм","9 мм","10 мм","12 мм","14 мм","15 мм","16 мм","18 мм","19 мм","20 мм","21 мм","22 мм","24 мм","25 мм","26 мм","27 мм","28 мм","29 мм","30 мм","31 мм","32 мм","33 мм","34 мм","35 мм","36 мм","37 мм","38 мм","39 мм","40 мм"]};
 var MN={pvc:"ПВХ вспен.",alu:"Алюмоком.",org:"Оргстекло",orgs:"Орг.со ступ.",fan:"Фанера/МДФ",mas:"Массив/ДСП",txt:"Текстолит",met:"Алюминий"};
+
+
+var discountActive = false;
+var DISCOUNT_CODE = "YAKATIA";
+
+function applyDiscount(val){
+  discountActive = val.trim().toUpperCase() === DISCOUNT_CODE;
+  var badge = document.getElementById('discountBadge');
+  badge.classList.toggle('show', discountActive);
+  calc();
+}
 
 var meters=1,cart=[],toastTimer=null;
 
@@ -606,10 +756,16 @@ function calc(){
     setBtn(false); return;
   }
   var r=getPrice(mat,key); if(!r){setBtn(false);return;}
-  var total=r.per*meters;
+  var raw=r.per*meters;
+  var disc=discountActive&&meters<200?0.9:1;
+  var afterDisc=raw*disc;
+  var total=Math.max(afterDisc, 500);
+  var isMin=total>afterDisc;
   document.getElementById("resNum").innerHTML=fmtN(total)+'<span class="result-rub">₽</span>';
   var hint=fmtP(r.per)+" ₽/м × "+meters+" м";
+  if(discountActive&&meters<200) hint+=' <span class="disc-pill" style="background:rgba(90,173,120,0.15);color:#6dc88a;border-color:rgba(90,173,120,0.3)">−10%</span>';
   if(r.tier) hint+=' <span class="disc-pill">'+r.tier+"</span>";
+  if(isMin) hint+=' <span class="disc-pill" style="background:rgba(255,180,0,0.15);color:#f5a623;border-color:rgba(255,180,0,0.3)">мин. 500 ₽</span>';
   document.getElementById("resHint").innerHTML=hint;
   setBtn(true);
 }
@@ -619,50 +775,60 @@ function addItem(btn){
   var key=document.getElementById("selThick").value;
   var tl=document.getElementById("selThick").options[document.getElementById("selThick").selectedIndex].text;
   var r=getPrice(mat,key); if(!r) return;
-  cart.push({id:Date.now(),mat:mat,tl:tl,meters:meters,per:r.per,tier:r.tier,total:r.per*meters});
+  var raw=r.per*meters;
+  var disc=discountActive&&meters<200?0.9:1;
+  var total=Math.max(raw*disc, 500);
+  cart.push({id:Date.now(),mat:mat,tl:tl,meters:meters,per:r.per,tier:r.tier,total:total});
   renderCart(); showToast(); bump(btn);
 }
 
-function calcUn(type){
-  if(type==="fan"){
-    var mm=parseInt(document.getElementById("unFan").value);
-    var qty=parseInt(document.getElementById("unFanQty").value)||0;
-    var res=document.getElementById("unFanRes"),btn=document.getElementById("btnUnFan");
-    if(!mm||qty<1){res.innerHTML="";btn.disabled=true;return;}
-    res.innerHTML='<span class="unload-price">'+fmtN(mm*3.5*qty)+' ₽</span> — '+mm+' мм × 3.5 ₽ × '+qty+' л.';
-    btn.disabled=false;
-  } else if(type==="adv"){
-    var mm=parseInt(document.getElementById("unAdv").value);
-    var qty=parseInt(document.getElementById("unAdvQty").value)||0;
-    var res=document.getElementById("unAdvRes"),btn=document.getElementById("btnUnAdv");
-    if(!mm||qty<1){res.innerHTML="";btn.disabled=true;return;}
-    res.innerHTML='<span class="unload-price">'+fmtN(mm*17*qty)+' ₽</span> — '+mm+' мм × 17 ₽ × '+qty+' л.';
-    btn.disabled=false;
-  } else {
-    var kg=parseFloat(document.getElementById("unPlasticKg").value);
-    var res=document.getElementById("unPlasticRes"),btn=document.getElementById("btnUnPlastic");
-    if(!kg||kg<=0){res.innerHTML="";btn.disabled=true;return;}
-    res.innerHTML='<span class="unload-price">'+fmtN(kg*15)+' ₽</span> — '+kg+' кг × 15 ₽';
-    btn.disabled=false;
-  }
+function onUnType(){
+  var type=document.getElementById("unType").value;
+  document.getElementById("unSheetBlock").style.display=(type==="fan"||type==="adv")?"block":"none";
+  document.getElementById("unPlasticBlock").style.display=(type==="plastic")?"block":"none";
+  document.getElementById("unSheetRes").innerHTML="";
+  document.getElementById("unPlasticRes").innerHTML="";
+  document.getElementById("btnUnSheet").disabled=true;
+  document.getElementById("btnUnPlastic").disabled=true;
 }
 
-function addUn(type,btn){
-  if(type==="fan"){
-    var mm=parseInt(document.getElementById("unFan").value);
-    var qty=parseInt(document.getElementById("unFanQty").value)||0;
-    if(!mm||qty<1) return;
-    cart.push({id:Date.now(),label:"Разгрузка фанеры",meta:mm+" мм × 3.5 ₽/мм × "+qty+" л.",total:mm*3.5*qty});
-  } else if(type==="adv"){
-    var mm=parseInt(document.getElementById("unAdv").value);
-    var qty=parseInt(document.getElementById("unAdvQty").value)||0;
-    if(!mm||qty<1) return;
-    cart.push({id:Date.now(),label:"Разгрузка листовых рекл. материалов",meta:mm+" мм × 17 ₽/мм × "+qty+" л.",total:mm*17*qty});
-  } else {
-    var kg=parseFloat(document.getElementById("unPlasticKg").value);
-    if(!kg||kg<=0) return;
-    cart.push({id:Date.now(),label:"Разгрузка инж. пластиков",meta:kg+" кг × 15 ₽/кг",total:kg*15});
-  }
+function calcUnSheet(){
+  var type=document.getElementById("unType").value;
+  var mm=parseFloat(document.getElementById("unSheetMm").value);
+  var qty=parseInt(document.getElementById("unSheetQty").value)||0;
+  var res=document.getElementById("unSheetRes");
+  var btn=document.getElementById("btnUnSheet");
+  if(!mm||qty<1){res.innerHTML="";btn.disabled=true;return;}
+  var rate=type==="fan"?3.5:17;
+  var price=mm*rate*qty;
+  res.innerHTML='<span class="unload-price">'+fmtN(price)+' ₽</span> — '+mm+' мм × '+rate+' ₽ × '+qty+' л.';
+  btn.disabled=false;
+}
+
+function addUnSheet(btn){
+  var type=document.getElementById("unType").value;
+  var mm=parseFloat(document.getElementById("unSheetMm").value);
+  var qty=parseInt(document.getElementById("unSheetQty").value)||0;
+  if(!mm||qty<1) return;
+  var rate=type==="fan"?3.5:17;
+  var label=type==="fan"?"Разгрузка фанеры":"Разгрузка листовых рекл. материалов";
+  cart.push({id:Date.now(),label:label,meta:mm+" мм × "+rate+" ₽/мм × "+qty+" л.",total:mm*rate*qty,isUnload:true});
+  renderCart(); showToast(); bump(btn);
+}
+
+function calcUnPlastic(){
+  var kg=parseFloat(document.getElementById("unPlasticKg").value);
+  var res=document.getElementById("unPlasticRes");
+  var btn=document.getElementById("btnUnPlastic");
+  if(!kg||kg<=0){res.innerHTML="";btn.disabled=true;return;}
+  res.innerHTML='<span class="unload-price">'+fmtN(kg*15)+' ₽</span> — '+kg+' кг × 15 ₽';
+  btn.disabled=false;
+}
+
+function addUnPlastic(btn){
+  var kg=parseFloat(document.getElementById("unPlasticKg").value);
+  if(!kg||kg<=0) return;
+  cart.push({id:Date.now(),label:"Разгрузка инж. пластиков",meta:kg+" кг × 15 ₽/кг",total:kg*15,isUnload:true});
   renderCart(); showToast(); bump(btn);
 }
 
@@ -683,8 +849,13 @@ function renderCart(){
     html+='<div class="cart-item"><div class="ci-info"><div class="ci-name">'+name+'</div><div class="ci-meta">'+meta+'</div></div><div class="ci-price">'+fmtN(c.total)+' ₽</div><button class="ci-rm" onclick="removeItem('+c.id+')">×</button></div>';
   }
   document.getElementById("cartList").innerHTML=html;
-  var total=cart.reduce(function(s,c){return s+c.total;},0);
-  document.getElementById("cfVal").textContent=fmtN(total)+" ₽";
+  var cuttingTotal=cart.filter(function(c){return !c.isUnload;}).reduce(function(s,c){return s+c.total;},0);
+  var unloadTotal=cart.filter(function(c){return c.isUnload;}).reduce(function(s,c){return s+c.total;},0);
+  var cuttingFinal=cuttingTotal>0?Math.max(cuttingTotal,1500):0;
+  var total=cuttingFinal+unloadTotal;
+  var minApplied=cuttingTotal>0&&cuttingFinal>cuttingTotal;
+  document.getElementById("cfVal").textContent=fmtN(total)+" ₽"+(minApplied?" *":"");
+  document.getElementById("cartMinNote").style.display=minApplied?"block":"none";
 }
 
 function showToast(){
@@ -728,7 +899,7 @@ function printPDF(){
   }
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'
     +'<meta name="viewport" content="width=device-width, initial-scale=1.0">'
-    +'<title>Смета</title>'
+    +'<title>Смета<\/title>'
     +'<style>'
     +'*{margin:0;padding:0;box-sizing:border-box}'
     +'body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:#222;padding:20px;background:#fff}'
@@ -744,17 +915,294 @@ function printPDF(){
     +'.ptv{font-size:1.8rem;font-weight:400;color:#1a6e3a}'
     +'.savebtn{display:block;width:100%;margin-top:24px;padding:16px;background:#2e6640;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;text-align:center}'
     +'@media print{.savebtn{display:none}}'
-    +'</style></head><body>'
-    +'<div class="ph"><span class="plogo">Портальный ЧПУ</span><span class="pdate">'+date+'</span></div>'
-    +'<table><thead><tr><th>#</th><th>Наименование</th><th>Параметры</th><th>Сумма</th></tr></thead>'
-    +'<tbody>'+rows+'</tbody></table>'
-    +'<div class="ptotal"><span class="ptl">Итого к оплате</span><span class="ptv">'+fmtN(total)+' ₽</span></div>'
-    +'<button class="savebtn" onclick="window.print()">Сохранить PDF</button>'
-    +'</body></html>';
+    +'<\/style><\/head><body>'
+    +'<div class="ph"><span class="plogo">Портальный ЧПУ<\/span><span class="pdate">'+date+'<\/span><\/div>'
+    +'<table><thead><tr><th>#<\/th><th>Наименование<\/th><th>Параметры<\/th><th>Сумма<\/th><\/tr><\/thead>'
+    +'<tbody>'+rows+'<\/tbody><\/table>'
+    +'<div class="ptotal"><span class="ptl">Итого к оплате<\/span><span class="ptv">'+fmtN(total)+' ₽<\/span><\/div>'
+    +'<button class="savebtn" onclick="window.print()">Сохранить PDF<\/button>'
+    +'<\/body><\/html>';
   var blob=new Blob([html],{type:'text/html;charset=utf-8'});
   var url=URL.createObjectURL(blob);
   window.open(url,'_blank');
 }
+
+// ── ATTACH FILE ───────────────────────────────────────────────────────────────
+var detectedMeters = 0;
+
+function openAttachModal(){
+  document.getElementById('attachModal').classList.add('open');
+  document.getElementById('modalResult').classList.remove('show');
+  document.getElementById('modalApply').classList.remove('show');
+}
+function closeAttachModal(e){
+  if(!e || e.target===document.getElementById('attachModal'))
+    document.getElementById('attachModal').classList.remove('open');
+}
+function triggerFile(type){
+  document.getElementById(type==='svg'?'fileInputSvg':'fileInputDxf').click();
+}
+
+function handleFile(input, type){
+  var file = input.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var text = e.target.result;
+    if(type==='svg') parseSVG(text, file.name);
+    else parseDXF(text, file.name);
+    input.value='';
+  };
+  reader.onerror = function(){ alert('Не удалось прочитать файл'); };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function showModalResult(meters, detail){
+  detectedMeters = meters;
+  var val = meters >= 100
+    ? Math.round(meters).toLocaleString('ru-RU')
+    : meters.toFixed(2);
+  document.getElementById('modalResultVal').innerHTML =
+    val + '<small>м/пог</small>';
+  document.getElementById('modalResultDetail').textContent = detail;
+  document.getElementById('modalResult').classList.add('show');
+  document.getElementById('modalApply').classList.add('show');
+}
+
+function applyLength(){
+  if(!detectedMeters) return;
+  var v = Math.max(1, Math.round(detectedMeters));
+  meters = v;
+  document.getElementById('lenVal').value = v;
+  document.getElementById('lenSlider').value = Math.min(v, 1000);
+  calc();
+  document.getElementById('attachModal').classList.remove('open');
+  if(navigator.vibrate) navigator.vibrate([8,20,8]);
+}
+
+// ── SVG PARSER ────────────────────────────────────────────────────────────────
+function parseSVG(text, filename){
+  try {
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(text, 'image/svg+xml');
+    var err = doc.querySelector('parsererror');
+    if(err){ alert('Ошибка чтения SVG файла'); return; }
+
+    // Get SVG viewport to determine units (mm vs px)
+    var svgEl = doc.querySelector('svg');
+    var vpWidth = svgEl ? svgEl.getAttribute('width') : null;
+    var scale = 1; // default: treat as mm → m
+
+    // If width has units like "210mm" → px conversion not needed
+    // getTotalLength returns in user units; if viewBox in mm → divide by 1000
+    var viewBox = svgEl ? svgEl.getAttribute('viewBox') : null;
+    var hasMMUnits = vpWidth && vpWidth.indexOf('mm') !== -1;
+
+    // Insert SVG into hidden div to use getTotalLength
+    var div = document.createElement('div');
+    div.style.cssText = 'position:absolute;visibility:hidden;width:0;height:0;overflow:hidden';
+    div.innerHTML = text;
+    document.body.appendChild(div);
+
+    var paths = div.querySelectorAll('path,line,polyline,polygon,circle,ellipse,rect');
+    var totalMM = 0;
+    var count = 0;
+
+    paths.forEach(function(el){
+      try {
+        var len = 0;
+        if(el.getTotalLength) {
+          len = el.getTotalLength(); // in user units
+        } else if(el.tagName === 'line') {
+          var dx = (+el.getAttribute('x2'))-(+el.getAttribute('x1'));
+          var dy = (+el.getAttribute('y2'))-(+el.getAttribute('y1'));
+          len = Math.sqrt(dx*dx+dy*dy);
+        }
+        if(len > 0){ totalMM += len; count++; }
+      } catch(ex){}
+    });
+
+    document.body.removeChild(div);
+
+    if(totalMM === 0){ alert('Контуры не найдены в SVG файле'); return; }
+
+    // Detect units: if width="210mm" and viewBox like "0 0 210 297" → 1 unit = 1mm
+    // if no units → assume Corel default (mm)
+    // Convert to metres
+    var metres = totalMM / 1000;
+
+    // If looks too small (< 0.01m) or too large (> 100000m), try px→mm (1px=0.264583mm)
+    if(metres < 0.01 || metres > 50000){
+      metres = (totalMM * 0.264583) / 1000;
+    }
+
+    showModalResult(metres,
+      'Файл: ' + filename + ' · Элементов: ' + count + ' · Единицы: мм');
+  } catch(ex){
+    alert('Не удалось прочитать SVG: ' + ex.message);
+  }
+}
+
+// ── DXF PARSER ────────────────────────────────────────────────────────────────
+function parseDXF(text, filename){
+  try {
+    var totalMM = 0;
+    var count = 0;
+    var lines = text.split(/\r?\n/);
+    var i = 0;
+
+    function val(offset){ return lines[i + offset] ? lines[i + offset].trim() : ''; }
+
+    while(i < lines.length){
+      var code = lines[i].trim();
+      var v    = lines[i+1] ? lines[i+1].trim() : '';
+
+      // LINE entity
+      if(code === '0' && v === 'LINE'){
+        i += 2;
+        var lx1=0,ly1=0,lx2=0,ly2=0;
+        while(i < lines.length){
+          var c = lines[i].trim();
+          if(c === '0') break;
+          var n = parseFloat(lines[i+1]);
+          if(c==='10') lx1=n; else if(c==='20') ly1=n;
+          else if(c==='11') lx2=n; else if(c==='21') ly2=n;
+          i+=2;
+        }
+        var dx=lx2-lx1, dy=ly2-ly1;
+        totalMM += Math.sqrt(dx*dx+dy*dy);
+        count++;
+        continue;
+      }
+
+      // ARC entity
+      if(code === '0' && v === 'ARC'){
+        i += 2;
+        var ar=0, aStart=0, aEnd=0;
+        while(i < lines.length){
+          var c = lines[i].trim();
+          if(c === '0') break;
+          var n = parseFloat(lines[i+1]);
+          if(c==='40') ar=n;
+          else if(c==='50') aStart=n;
+          else if(c==='51') aEnd=n;
+          i+=2;
+        }
+        var angleDeg = aEnd >= aStart ? aEnd-aStart : 360-aStart+aEnd;
+        totalMM += ar * (angleDeg * Math.PI / 180);
+        count++;
+        continue;
+      }
+
+      // CIRCLE entity
+      if(code === '0' && v === 'CIRCLE'){
+        i += 2;
+        var cr=0;
+        while(i < lines.length){
+          var c = lines[i].trim();
+          if(c === '0') break;
+          if(c==='40') cr=parseFloat(lines[i+1]);
+          i+=2;
+        }
+        totalMM += 2 * Math.PI * cr;
+        count++;
+        continue;
+      }
+
+      // LWPOLYLINE entity
+      if(code === '0' && v === 'LWPOLYLINE'){
+        i += 2;
+        var pts=[]; var closed=false; var pBulges=[];
+        var cx=null, cy=null, cBulge=0;
+        while(i < lines.length){
+          var c = lines[i].trim();
+          if(c === '0') break;
+          var n = parseFloat(lines[i+1]);
+          if(c==='70' && (n & 1)) closed=true;
+          if(c==='10'){ if(cx!==null) pts.push([cx,cy,cBulge]); cx=n; cBulge=0; }
+          else if(c==='20') cy=n;
+          else if(c==='42') cBulge=n;
+          i+=2;
+        }
+        if(cx!==null) pts.push([cx,cy,cBulge]);
+        if(closed && pts.length) pts.push(pts[0]);
+        for(var p=0; p<pts.length-1; p++){
+          var ax=pts[p][0],ay=pts[p][1],bx=pts[p+1][0],by=pts[p+1][1],bulge=pts[p][2];
+          var segLen = Math.sqrt((bx-ax)*(bx-ax)+(by-ay)*(by-ay));
+          if(Math.abs(bulge) > 1e-9){
+            // arc segment via bulge
+            var d = segLen;
+            var R = d * (1 + bulge*bulge) / (4*Math.abs(bulge));
+            var theta = 4 * Math.atan(Math.abs(bulge));
+            segLen = R * theta;
+          }
+          totalMM += segLen;
+        }
+        if(pts.length > 1) count++;
+        continue;
+      }
+
+      // SPLINE — approximate via control points distance
+      if(code === '0' && v === 'SPLINE'){
+        i += 2;
+        var spts=[];
+        while(i < lines.length){
+          var c = lines[i].trim();
+          if(c === '0') break;
+          if(c==='10'){ var sx=parseFloat(lines[i+1]); var sy=parseFloat(lines[i+3]); spts.push([sx,sy]); i+=4; continue; }
+          i+=2;
+        }
+        for(var s=0;s<spts.length-1;s++){
+          var ddx=spts[s+1][0]-spts[s][0], ddy=spts[s+1][1]-spts[s][1];
+          totalMM+=Math.sqrt(ddx*ddx+ddy*ddy);
+        }
+        if(spts.length>1) count++;
+        continue;
+      }
+
+      i += 2;
+    }
+
+    if(totalMM === 0){ alert('Контуры не найдены в DXF файле'); return; }
+
+    var metres = totalMM / 1000;
+    if(metres < 0.01 || metres > 50000) metres = (totalMM * 0.0254) / 1000;
+
+    showModalResult(metres,
+      'Файл: ' + filename + ' · Объектов: ' + count + ' · Единицы: мм');
+  } catch(ex){
+    alert('Не удалось прочитать DXF: ' + ex.message);
+  }
+}
+
+
 </script>
+
+<!-- MODAL: ATTACH FILE -->
+<div class="modal-overlay" id="attachModal" onclick="closeAttachModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-title">Измерить длину контура</div>
+    <div class="modal-sub">Экспортируйте контур из Corel Draw в SVG или DXF и загрузите файл</div>
+    <div class="modal-btns">
+      <button class="modal-file-btn" onclick="triggerFile('svg')">
+        <span class="modal-file-ext">SVG</span>
+        Векторный файл
+      </button>
+      <button class="modal-file-btn" onclick="triggerFile('dxf')">
+        <span class="modal-file-ext">DXF</span>
+        AutoCAD файл
+      </button>
+    </div>
+    <input type="file" id="fileInputSvg" accept=".svg" style="display:none" onchange="handleFile(this,'svg')">
+    <input type="file" id="fileInputDxf" accept=".dxf" style="display:none" onchange="handleFile(this,'dxf')">
+    <div class="modal-result" id="modalResult">
+      <div class="modal-result-lbl">Длина контуров</div>
+      <div class="modal-result-val" id="modalResultVal">—</div>
+      <div class="modal-result-detail" id="modalResultDetail"></div>
+    </div>
+    <button class="modal-apply" id="modalApply" onclick="applyLength()">Применить к расчёту</button>
+    <button class="modal-cancel" onclick="closeAttachModal()">Отмена</button>
+  </div>
+</div>
 </body>
 </html>
