@@ -27,6 +27,16 @@
 
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
+.version-badge {
+  position: fixed; top: 12px; right: 14px; z-index: 500;
+  font-family: -apple-system, BlinkMacSystemFont, monospace;
+  font-size: 0.62rem; font-weight: 600;
+  color: var(--muted2);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  user-select: none;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--bg);
@@ -545,6 +555,7 @@ select option { background: #1a3524; color: var(--text2); }
 </style>
 </head>
 <body>
+<div class="version-badge">v.1</div>
 <div class="card">
   <h1>Расчёт стоимости фрезеровки</h1>
 
@@ -995,19 +1006,7 @@ function initDrums(){
         fling(mVel);
       });
 
-      // колесико мыши
-      el.addEventListener('wheel', function(e){
-        e.preventDefault();
-        var delta = e.deltaY > 0 ? 1 : -1;
-        drumDigits[idx] = ((drumDigits[idx] + delta) % 10 + 10) % 10;
-        positionStrip(idx, drumDigits[idx], 0);
-        if(navigator.vibrate) navigator.vibrate(4);
-        meters = drumValue();
-        document.getElementById('drumsTotal').textContent = meters;
-        var lv = document.getElementById('lenVal');
-        if(lv) lv.value = meters;
-        calc();
-      }, {passive: false});
+
 
     })(i);
   }
@@ -1019,21 +1018,16 @@ function initDrums(){
     wrap.addEventListener('wheel', function(e){
       e.preventDefault();
       e.stopPropagation();
-      // figure out which drum the mouse is over
-      var drums = [
-        document.getElementById('drum3'),
-        document.getElementById('drum2'),
-        document.getElementById('drum1'),
-        document.getElementById('drum0')
-      ];
+      // find which drum element is under cursor by walking up from target
       var target = e.target;
-      // walk up to find drum
       while(target && target !== wrap){
-        for(var d=0;d<drums.length;d++){
-          if(drums[d] && (drums[d] === target || drums[d].contains(target))){
+        var drumId = target.id;
+        if(drumId && drumId.indexOf('drum') === 0 && drumId.length === 5){
+          var idx = parseInt(drumId.charAt(4));  // drum0→0, drum1→1, etc.
+          if(!isNaN(idx)){
             var delta = e.deltaY > 0 ? 1 : -1;
-            drumDigits[d] = ((drumDigits[d] + delta) % 10 + 10) % 10;
-            positionStrip(d, drumDigits[d], 0);
+            drumDigits[idx] = ((drumDigits[idx] + delta) % 10 + 10) % 10;
+            positionStrip(idx, drumDigits[idx], 0);
             meters = drumValue();
             document.getElementById('drumsTotal').textContent = meters;
             var lv = document.getElementById('lenVal');
